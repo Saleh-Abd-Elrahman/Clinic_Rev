@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Review - Clinic Review Kiosk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            max-width: 600px;
+            width: 100%;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a73e8;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .review-text {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #1a73e8;
+            margin: 2rem 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .copy-btn {
+            background: #34a853;
+        }
+
+        .copy-btn:hover {
+            background: #2d8f47;
+        }
+
+        .copy-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .instructions {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .review-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Your Review</h1>
+        
+        <div class="review-text" id="review-text">
+            <!-- Review text will be inserted here -->
+        </div>
+
+        <div class="copy-success" id="copy-success">
+            ✅ Review copied to clipboard!
+        </div>
+
+        <div class="actions">
+            <button class="copy-btn" id="copy-btn">
+                📋 Copy Review
+            </button>
+            
+            <button id="google-btn">
+                🌟 Copy & Open Google Reviews
+            </button>
+        </div>
+
+        <div class="instructions">
+            <p><strong>Instructions:</strong></p>
+            <p>1. Tap "Copy & Open Google Reviews" to automatically copy your review and open Google</p>
+            <p>2. In Google, find your clinic and tap "Write a review"</p>
+            <p>3. Paste your review and submit</p>
+        </div>
+    </div>
+
+    <script>
+        // Get review text from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const reviewText = urlParams.get('t');
+        
+        if (reviewText) {
+            const decodedReview = decodeURIComponent(reviewText);
+            document.getElementById('review-text').textContent = decodedReview;
+            
+            // Attempt to copy to clipboard on page load (best effort)
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(decodedReview).catch(err => {
+                    console.log('Auto-copy failed:', err);
+                });
+            }
+        } else {
+            document.getElementById('review-text').textContent = "No review text provided.";
+        }
+
+        // Copy button functionality
+        document.getElementById('copy-btn').addEventListener('click', async () => {
+            if (reviewText) {
+                try {
+                    const decodedReview = decodeURIComponent(reviewText);
+                    await navigator.clipboard.writeText(decodedReview);
+                    
+                    const successMsg = document.getElementById('copy-success');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 3000);
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = decodeURIComponent(reviewText);
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    const successMsg = document.getElementById('copy-success');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 3000);
+                }
+            }
+        });
+
+        // Copy and open Google Reviews
+        document.getElementById('google-btn').addEventListener('click', async () => {
+            if (reviewText) {
+                try {
+                    // Copy to clipboard first
+                    const decodedReview = decodeURIComponent(reviewText);
+                    await navigator.clipboard.writeText(decodedReview);
+                    
+                    const successMsg = document.getElementById('copy-success');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 3000);
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = decodeURIComponent(reviewText);
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+                
+                // Replace with actual Google Place ID
+                const placeId = 'PLACE_ID'; // This will be replaced with actual place ID
+                const googleUrl = `https://search.google.com/local/writereview?placeid=${placeId}`;
+                
+                // Open Google Reviews in same tab
+                location.href = googleUrl;
+            }
+        });
+    </script>
+</body>
+</html> 

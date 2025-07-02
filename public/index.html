@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Review Kiosk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            max-width: 800px;
+            width: 100%;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .card {
+            border: 2px solid #ddd;
+            padding: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: #1a73e8;
+            background: #f8f9ff;
+        }
+
+        .card.selected {
+            border-color: #1a73e8;
+            background: #e8f0fe;
+        }
+
+        .rating-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .rating-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+        }
+
+        .welcome-message {
+            background: #e8f5e8;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #2e7d32;
+        }
+
+        .qr-section {
+            text-align: center;
+        }
+
+        #qr {
+            display: inline-block;
+            margin: 2rem 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-preview {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #1a73e8;
+        }
+
+        .reset-info {
+            text-align: center;
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .rating-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Staff Login Section -->
+        <section id="login-section">
+            <h1>🏥 Clinic Review Kiosk</h1>
+            <h2>Staff Login</h2>
+            <div class="form-group">
+                <label for="password">Access Password:</label>
+                <input type="password" id="password" placeholder="Enter staff password">
+            </div>
+            <button id="loginBtn">Login</button>
+            <div id="login-error" class="error-message hidden">
+                Invalid password. Please try again.
+            </div>
+        </section>
+
+        <!-- Patient Details Section -->
+        <section id="patient-section" class="hidden">
+            <h1>👋 Welcome!</h1>
+            <h2>Patient Details</h2>
+            <div class="form-group">
+                <label for="patient-name">Patient Name:</label>
+                <input type="text" id="patient-name" placeholder="Enter patient's first name">
+            </div>
+            <div class="form-group">
+                <label for="operation">Type of Treatment/Operation:</label>
+                <select id="operation">
+                    <option value="">Select treatment type</option>
+                    <option value="Hip Replacement">Hip Replacement</option>
+                    <option value="Knee Replacement">Knee Replacement</option>
+                    <option value="Shoulder Surgery">Shoulder Surgery</option>
+                    <option value="Spine Surgery">Spine Surgery</option>
+                    <option value="General Consultation">General Consultation</option>
+                    <option value="Physical Therapy">Physical Therapy</option>
+                    <option value="Diagnostic Imaging">Diagnostic Imaging</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <button id="beginSurvey">Continue</button>
+        </section>
+
+        <!-- Welcome Message Section -->
+        <section id="welcome-section" class="hidden">
+            <div class="welcome-message" id="welcome-message">
+                <!-- Personalized welcome message will be inserted here -->
+            </div>
+            <div style="text-align: center;">
+                <button id="toSurveyBtn">Start Quick Feedback</button>
+            </div>
+        </section>
+
+        <!-- Survey Section -->
+        <section id="survey-section" class="hidden">
+            <h2>📝 Quick Feedback</h2>
+            <form id="survey-form">
+                <div class="form-group">
+                    <label>Overall Rating:</label>
+                    <div class="rating-group">
+                        <label><input type="radio" name="rating" value="1"> ⭐</label>
+                        <label><input type="radio" name="rating" value="2"> ⭐⭐</label>
+                        <label><input type="radio" name="rating" value="3"> ⭐⭐⭐</label>
+                        <label><input type="radio" name="rating" value="4"> ⭐⭐⭐⭐</label>
+                        <label><input type="radio" name="rating" value="5" checked> ⭐⭐⭐⭐⭐</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="practitioner">Primary Practitioner:</label>
+                    <select id="practitioner" name="practitioner">
+                        <option value="">Select practitioner</option>
+                        <option value="Dr. Smith">Dr. Smith</option>
+                        <option value="Dr. Johnson">Dr. Johnson</option>
+                        <option value="Dr. Williams">Dr. Williams</option>
+                        <option value="Dr. Brown">Dr. Brown</option>
+                        <option value="Dr. Davis">Dr. Davis</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>What stood out about your experience? (Select all that apply)</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="highlights" value="Professional staff"> Professional staff</label>
+                        <label><input type="checkbox" name="highlights" value="Clean facility"> Clean facility</label>
+                        <label><input type="checkbox" name="highlights" value="Short wait times"> Short wait times</label>
+                        <label><input type="checkbox" name="highlights" value="Clear communication"> Clear communication</label>
+                        <label><input type="checkbox" name="highlights" value="Comfortable environment"> Comfortable environment</label>
+                        <label><input type="checkbox" name="highlights" value="Modern equipment"> Modern equipment</label>
+                        <label><input type="checkbox" name="highlights" value="Friendly reception"> Friendly reception</label>
+                        <label><input type="checkbox" name="highlights" value="Thorough care"> Thorough care</label>
+                    </div>
+                </div>
+
+                <button type="submit">Generate Review Options</button>
+            </form>
+        </section>
+
+        <!-- AI Suggestions Section -->
+        <section id="suggestions-section" class="hidden">
+            <h2>📱 Choose Your Review</h2>
+            <p>Select the review that best represents your experience:</p>
+            <div id="suggestions-container">
+                <!-- AI-generated suggestions will be inserted here -->
+            </div>
+        </section>
+
+        <!-- QR Code Section -->
+        <section id="qr-section" class="hidden">
+            <div class="qr-section">
+                <h2>📱 Scan to Leave Your Review</h2>
+                <p>Scan this QR code with your phone to copy and post your review:</p>
+                <div id="qr"></div>
+                <div class="review-preview">
+                    <h3>Your Review:</h3>
+                    <blockquote id="selected-review"></blockquote>
+                </div>
+                <div class="reset-info">
+                    <p>This screen will automatically reset in 2 minutes</p>
+                    <p><em>Staff: Press 'R' to reset immediately</em></p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
