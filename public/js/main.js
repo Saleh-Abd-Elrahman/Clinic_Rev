@@ -217,20 +217,44 @@ function generateQRCode(reviewText) {
     const origin = window.location.origin;
     const qrUrl = `${origin}/review.html?t=${encodeURIComponent(reviewText)}`;
     
-    // Generate QR code
-    QRCode.toCanvas(qrContainer, qrUrl, {
-        width: 220,
-        height: 220,
-        color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-        }
-    }, (error) => {
-        if (error) {
-            console.error('QR code generation error:', error);
-            qrContainer.innerHTML = '<p>Error generating QR code</p>';
-        }
-    });
+    // Check if qrcode library is available
+    if (typeof qrcode === 'undefined') {
+        console.error('QRCode library not loaded');
+        qrContainer.innerHTML = `
+            <div style="padding: 40px; border: 2px dashed #ccc; text-align: center;">
+                <p style="margin-bottom: 15px;"><strong>QR Code Generation Failed</strong></p>
+                <p style="font-size: 14px; color: #666;">Manual Link:</p>
+                <input type="text" value="${qrUrl}" style="width: 100%; padding: 8px; margin-top: 10px; font-size: 12px;" readonly onclick="this.select()">
+                <p style="font-size: 12px; color: #888; margin-top: 10px;">Copy this link and open on your phone</p>
+            </div>
+        `;
+        return;
+    }
+    
+    try {
+        // Generate QR code using qrcode-generator library
+        const qr = qrcode(0, 'M'); // Error correction level M
+        qr.addData(qrUrl);
+        qr.make();
+        
+        // Create the QR code as an image
+        const qrImage = qr.createDataURL(4, 4); // cell size 4, margin 4
+        
+        // Display as image
+        qrContainer.innerHTML = `<img src="${qrImage}" alt="QR Code" style="max-width: 220px; max-height: 220px;">`;
+        
+        console.log('✅ QR Code generated successfully');
+    } catch (error) {
+        console.error('QR code generation error:', error);
+        qrContainer.innerHTML = `
+            <div style="padding: 40px; border: 2px dashed #ccc; text-align: center;">
+                <p style="margin-bottom: 15px;"><strong>QR Code Generation Failed</strong></p>
+                <p style="font-size: 14px; color: #666;">Manual Link:</p>
+                <input type="text" value="${qrUrl}" style="width: 100%; padding: 8px; margin-top: 10px; font-size: 12px;" readonly onclick="this.select()">
+                <p style="font-size: 12px; color: #888; margin-top: 10px;">Copy this link and open on your phone</p>
+            </div>
+        `;
+    }
 }
 
 // Auto-reset functionality
@@ -291,10 +315,21 @@ function resetKiosk() {
 
 // Keyboard shortcut for staff reset
 function handleKeyboardShortcuts(event) {
-    // Press 'R' to reset (case insensitive)
-    if (event.key.toLowerCase() === 'r') {
+    // Press 'R' to reset (case insensitive) - Only works when NOT in input fields
+    if (event.key.toLowerCase() === 'r' && !isInputFocused()) {
+        console.log('Staff reset triggered by R key');
         resetKiosk();
     }
+}
+
+// Helper function to check if user is typing in an input field
+function isInputFocused() {
+    const activeElement = document.activeElement;
+    return activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' || 
+        activeElement.tagName === 'SELECT'
+    );
 }
 
 // Event listeners

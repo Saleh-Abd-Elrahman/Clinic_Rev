@@ -322,8 +322,16 @@
         </section>
     </div>
 
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code Library (Local) -->
+    <script src="libs/qrcode.min.js"></script>
+    <script>
+        // Check if QR library loaded successfully
+        if (typeof qrcode !== 'undefined') {
+            console.log('✅ QR Code library loaded successfully');
+        } else {
+            console.error('❌ QR Code library failed to load');
+        }
+    </script>
     <script src="js/main.js"></script>
 </body>
 </html> 
