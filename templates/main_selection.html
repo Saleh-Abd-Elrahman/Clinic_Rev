@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Main Menu{% endblock %}
+{% block body_class %}main-selection-page{% endblock %}
+
+{% block content %}
+<div class="main-selection-section">
+    <h1>🏥 Clinic Review System</h1>
+    <h2>What would you like to do?</h2>
+    
+    <div class="selection-grid">
+        <div class="selection-card patient-card" onclick="window.location.href='/patient-start'">
+            <div class="card-icon">👤</div>
+            <h3>Patient Review</h3>
+            <p>Help a patient leave a review for Google</p>
+            <div class="card-features">
+                <span>✓ Personalized welcome</span>
+                <span>✓ AI-generated reviews</span>
+                <span>✓ QR code generation</span>
+            </div>
+            <a href="/patient-start" class="selection-btn">Start Patient Review</a>
+        </div>
+        
+        <div class="selection-card admin-card" onclick="window.location.href='/admin'">
+            <div class="card-icon">⚙️</div>
+            <h3>Admin Dashboard</h3>
+            <p>Manage clinic data and view analytics</p>
+            <div class="card-features">
+                <span>✓ Manage doctors & procedures</span>
+                <span>✓ View review analytics</span>
+                <span>✓ Configure factors</span>
+            </div>
+            <a href="/admin" class="selection-btn">Open Admin Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="logout-section">
+        <form method="post" action="/logout">
+            <button type="submit" class="logout-btn">🚪 Logout</button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

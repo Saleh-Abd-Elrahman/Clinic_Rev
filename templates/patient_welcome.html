@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome Message{% endblock %}
+{% block body_class %}patient-welcome-page{% endblock %}
+
+{% block content %}
+<div class="welcome-section">
+    <div class="welcome-message">
+        {{ welcome_message }}
+    </div>
+    
+    <div class="welcome-actions">
+        <p>We hope you had a great experience. Please take a moment to share your feedback!</p>
+        
+        <form method="get" action="/patient-survey" id="continue-form">
+            <input type="hidden" name="session_data" value="{{ session_data|e }}">
+            <button type="submit" class="continue-btn">Start Quick Feedback</button>
+        </form>
+    </div>
+    
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+<script>
+// Store session data in sessionStorage for the survey
+document.addEventListener('DOMContentLoaded', function() {
+    const sessionData = {{ session_data|tojson }};
+    console.log('Session data to store:', sessionData);
+    const sessionDataString = JSON.stringify(sessionData);
+    console.log('Session data as JSON string:', sessionDataString);
+    sessionStorage.setItem('patientSessionData', sessionDataString);
+    
+    // Auto-advance after 5 seconds if no interaction
+    let autoAdvanceTimeout = setTimeout(function() {
+        document.getElementById('continue-form').submit();
+    }, 5000);
+    
+    // Cancel auto-advance if user interacts
+    document.addEventListener('click', function() {
+        clearTimeout(autoAdvanceTimeout);
+    });
+    
+    document.addEventListener('keydown', function() {
+        clearTimeout(autoAdvanceTimeout);
+    });
+});
+</script>
+
+<style>
+.welcome-section {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.welcome-message {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    font-size: 1.3rem;
+    color: #2e7d32;
+    border: 2px solid #4caf50;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.1);
+}
+
+.welcome-actions {
+    margin-bottom: 2rem;
+}
+
+.welcome-actions p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 1.5rem;
+}
+
+.continue-btn {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.continue-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.navigation {
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .welcome-section {
+        padding: 1rem;
+    }
+    
+    .welcome-message {
+        font-size: 1.1rem;
+        padding: 1.5rem;
+    }
+    
+    .continue-btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %} 

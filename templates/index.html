@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block body_class %}login-page{% endblock %}
+
+{% block content %}
+<div class="login-section">
+    <h1>🏥 Staff Login</h1>
+    {% if error %}
+        <div class="error-message">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/login">
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Enter staff password" required>
+        </div>
+        <button type="submit" class="login-btn">Login</button>
+    </form>
+</div>
+{% endblock %} 

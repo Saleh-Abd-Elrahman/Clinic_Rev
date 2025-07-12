@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Survey{% endblock %}
+{% block body_class %}patient-survey-page{% endblock %}
+
+{% block content %}
+<div class="survey-section">
+    <h1>📝 Quick Feedback</h1>
+    <h2>How was your experience?</h2>
+    
+    <form method="post" action="/review-generating" id="survey-form">
+        <input type="hidden" name="session_data" id="session-data-input">
+        
+        <div class="form-group">
+            <label>Overall Rating:</label>
+            <div class="rating-group">
+                <label class="star-rating">
+                    <input type="radio" name="rating" value="1">
+                    <span class="stars">⭐</span>
+                </label>
+                <label class="star-rating">
+                    <input type="radio" name="rating" value="2">
+                    <span class="stars">⭐⭐</span>
+                </label>
+                <label class="star-rating">
+                    <input type="radio" name="rating" value="3">
+                    <span class="stars">⭐⭐⭐</span>
+                </label>
+                <label class="star-rating">
+                    <input type="radio" name="rating" value="4">
+                    <span class="stars">⭐⭐⭐⭐</span>
+                </label>
+                <label class="star-rating">
+                    <input type="radio" name="rating" value="5" checked>
+                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>What stood out about your experience? (Select all that apply)</label>
+            <div class="checkbox-group">
+                {% for factor in factors %}
+                <label class="factor-checkbox">
+                    <input type="checkbox" name="selected_factors" value="{{ factor.name }}">
+                    <span class="checkmark">{{ factor.name }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="additional-comments">Additional Comments (optional):</label>
+            <button type="button" id="toggle-comments" class="toggle-btn">+ Add Comments</button>
+            <textarea id="additional-comments" name="additional_comments" placeholder="Share any specific details about your experience..." style="display: none;"></textarea>
+        </div>
+        
+        <button type="submit" class="generate-btn">Generate Review Options</button>
+    </form>
+    
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load session data from sessionStorage
+    const sessionData = sessionStorage.getItem('patientSessionData');
+    console.log('Session data from storage:', sessionData);
+    if (sessionData) {
+        document.getElementById('session-data-input').value = sessionData;
+        console.log('Session data set in form field:', sessionData);
+    } else {
+        console.error('No session data found in sessionStorage');
+        alert('Session data not found. Please start from the beginning.');
+    }
+    
+    // Toggle comments textarea
+    const toggleCommentsBtn = document.getElementById('toggle-comments');
+    const commentsTextarea = document.getElementById('additional-comments');
+    
+    toggleCommentsBtn.addEventListener('click', function() {
+        if (commentsTextarea.style.display === 'none') {
+            commentsTextarea.style.display = 'block';
+            toggleCommentsBtn.textContent = '- Hide Comments';
+        } else {
+            commentsTextarea.style.display = 'none';
+            toggleCommentsBtn.textContent = '+ Add Comments';
+        }
+    });
+    
+    // Form validation
+    document.getElementById('survey-form').addEventListener('submit', function(e) {
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const factors = document.querySelectorAll('input[name="selected_factors"]:checked');
+        
+        console.log('Form submission - Rating selected:', rating ? rating.value : 'none');
+        console.log('Form submission - Factors selected:', factors.length);
+        
+        if (!rating) {
+            e.preventDefault();
+            alert('Please select a rating.');
+            return;
+        }
+        
+        if (factors.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one factor that stood out.');
+            return;
+        }
+        
+        // Debug: Check what's being submitted
+        const sessionDataInput = document.getElementById('session-data-input');
+        console.log('Session data being submitted:', sessionDataInput.value);
+        
+        if (!sessionDataInput.value) {
+            e.preventDefault();
+            alert('Session data is missing. Please start from the beginning.');
+            return;
+        }
+        
+        console.log('Form validation passed - submitting form');
+    });
+    
+    // Add interactive star rating
+    const starRatings = document.querySelectorAll('.star-rating');
+    starRatings.forEach(rating => {
+        rating.addEventListener('click', function() {
+            starRatings.forEach(r => r.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Also select all stars up to this one
+            const value = parseInt(this.querySelector('input').value);
+            starRatings.forEach((r, index) => {
+                if (index < value) {
+                    r.classList.add('highlighted');
+                } else {
+                    r.classList.remove('highlighted');
+                }
+            });
+        });
+    });
+    
+    // Initialize default 5-star selection
+    starRatings[4].classList.add('selected');
+    starRatings.forEach((r, index) => {
+        if (index < 5) {
+            r.classList.add('highlighted');
+        }
+    });
+});
+</script>
+
+<style>
+.survey-section {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.rating-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.star-rating {
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.star-rating:hover {
+    background-color: #f0f7ff;
+    border-color: #1a73e8;
+}
+
+.star-rating.selected {
+    background-color: #e3f2fd;
+    border-color: #1a73e8;
+}
+
+.star-rating.highlighted {
+    background-color: #fff3e0;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.stars {
+    font-size: 1.5rem;
+    display: block;
+    text-align: center;
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.factor-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.factor-checkbox:hover {
+    border-color: #1a73e8;
+    background-color: #f0f7ff;
+}
+
+.factor-checkbox input:checked + .checkmark {
+    font-weight: bold;
+    color: #1a73e8;
+}
+
+.factor-checkbox input:checked {
+    accent-color: #1a73e8;
+}
+
+.toggle-btn {
+    background: #666;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.toggle-btn:hover {
+    background: #555;
+}
+
+textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.generate-btn {
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    display: block;
+    margin: 2rem auto;
+}
+
+.generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(26, 115, 232, 0.4);
+}
+
+@media (max-width: 768px) {
+    .survey-section {
+        padding: 1rem;
+    }
+    
+    .rating-group {
+        gap: 0.5rem;
+    }
+    
+    .checkbox-group {
+        grid-template-columns: 1fr;
+    }
+    
+    .generate-btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %} 

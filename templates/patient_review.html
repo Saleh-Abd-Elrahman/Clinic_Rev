@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block body_class %}patient-survey-page{% endblock %}
+
+{% block content %}
+<div class="patient-section">
+    <h1>📝 Patient Details</h1>
+    <form id="patient-form">
+        <div class="form-group">
+            <label for="patient-name">Patient Name:</label>
+            <input type="text" id="patient-name" name="patient_name" placeholder="Enter patient's first name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="treatment">Type of Treatment/Operation:</label>
+            <select id="treatment" name="treatment" required>
+                <option value="">Select treatment type</option>
+                {% for treatment in treatments %}
+                <option value="{{ treatment.name }}">{{ treatment.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="doctor">Primary Practitioner:</label>
+            <select id="doctor" name="doctor" required>
+                <option value="">Select practitioner</option>
+                {% for doctor in doctors %}
+                <option value="{{ doctor.name }}">{{ doctor.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Overall Rating:</label>
+            <div class="rating-group">
+                {% for i in range(1, 6) %}
+                <label class="star-label">
+                    <input type="radio" name="rating" value="{{ i }}" required>
+                    <span class="star">★</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>What stood out about your experience? (Select all that apply)</label>
+            <div class="highlights-group">
+                {% for highlight in highlights %}
+                <label>
+                    <input type="checkbox" name="highlights" value="{{ highlight }}">
+                    {{ highlight }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="feedback">Additional Feedback:</label>
+            <textarea id="feedback" name="feedback" placeholder="Share your experience..." rows="4"></textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn">Generate Review QR Code</button>
+    </form>
+    
+    <div id="qr-display" style="display: none;">
+        <h2>🔗 Scan to Leave Your Review</h2>
+        <div id="qr-code"></div>
+        <p>Scan this QR code with your phone to copy and post your review</p>
+        <button id="back-btn" class="back-btn">Start New Review</button>
+    </div>
+    
+    <div class="back-to-main">
+        <a href="/main-selection" class="back-to-main-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.getElementById('patient-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Get selected highlights
+    const highlights = Array.from(document.querySelectorAll('input[name="highlights"]:checked'))
+        .map(cb => cb.value);
+    formData.set('highlights', highlights.join(', '));
+    
+    try {
+        const response = await fetch('/api/generate-qr', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('qr-code').innerHTML = `<img src="${data.qr_code}" alt="QR Code">`;
+            document.getElementById('patient-form').style.display = 'none';
+            document.getElementById('qr-display').style.display = 'block';
+        } else {
+            alert('Error generating QR code: ' + data.detail);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+});
+
+document.getElementById('back-btn').addEventListener('click', function() {
+    document.getElementById('patient-form').style.display = 'block';
+    document.getElementById('qr-display').style.display = 'none';
+    document.getElementById('patient-form').reset();
+});
+</script>
+{% endblock %}
+{% endblock %} 

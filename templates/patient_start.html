@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Information{% endblock %}
+{% block body_class %}patient-survey-page{% endblock %}
+
+{% block extra_css %}
+<style>
+/* iPad-optimized styling for toggle button and auto-selection */
+.toggle-btn {
+    background: #f8f9fa !important;
+    color: #6c757d !important;
+    padding: 12px 24px !important;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    margin-bottom: 16px !important;
+    display: inline-block !important;
+    text-decoration: none !important;
+    line-height: 1.5 !important;
+    min-height: 44px !important;
+    min-width: 120px !important;
+    touch-action: manipulation !important;
+}
+
+.toggle-btn:hover, .toggle-btn:active {
+    background: #e9ecef !important;
+    color: #495057 !important;
+    border-color: #adb5bd !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.auto-selected {
+    background: #f8f9fa !important;
+    border: 2px solid #e1e5e9 !important;
+    border-radius: 12px !important;
+    padding: 20px 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+    min-height: 60px !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.auto-selected::before {
+    content: "✓" !important;
+    color: #28a745 !important;
+    font-weight: bold !important;
+    margin-right: 16px !important;
+    background: #28a745 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1rem !important;
+    flex-shrink: 0 !important;
+}
+
+.auto-selected-text {
+    font-weight: 500 !important;
+    color: #495057 !important;
+    font-size: 1.2rem !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+}
+
+/* iPad-specific form improvements - Larger elements */
+.form-group input, .form-group select {
+    font-size: 1.3rem !important;
+    padding: 20px 24px !important;
+    min-height: 60px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.form-group label {
+    font-size: 1.3rem !important;
+    margin-bottom: 12px !important;
+    font-weight: 600 !important;
+    display: block !important;
+}
+
+.continue-btn {
+    font-size: 1.4rem !important;
+    padding: 24px 48px !important;
+    min-height: 70px !important;
+    border-radius: 15px !important;
+    width: 100% !important;
+    margin-top: 20px !important;
+    font-weight: 600 !important;
+}
+
+/* Full-screen landscape layout for iPad */
+.patient-section {
+    padding: 40px 60px !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+.form-group {
+    margin-bottom: 32px !important;
+    width: 100% !important;
+}
+
+/* Two-column layout for form fields */
+.form-row {
+    display: flex !important;
+    gap: 32px !important;
+    margin-bottom: 32px !important;
+    width: 100% !important;
+}
+
+.form-row .form-group {
+    flex: 1 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Full-width message section */
+.message-section {
+    margin-top: 16px !important;
+}
+
+/* Touch-friendly navigation */
+.back-btn {
+    font-size: 1.1rem !important;
+    padding: 12px 20px !important;
+    min-height: 44px !important;
+}
+
+/* Responsive design for different screen sizes */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+    
+    .patient-section {
+        padding: 20px !important;
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+    
+    .form-group input, .form-group select {
+        font-size: 1rem !important;
+        padding: 12px 16px !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .patient-section {
+        width: 100vw !important;
+        height: 100vh !important;
+        padding: 60px 80px !important;
+    }
+    
+    .form-row {
+        gap: 40px !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="patient-section">
+    <h1>👋 Welcome!</h1>
+    <h2>Please enter your information</h2>
+    
+    <form method="post" action="/patient-details" id="patient-form" 
+          data-auto-doctor-id="{% if auto_select_doctor and not auto_select_procedure %}{{ auto_doctor.id }}{% endif %}">
+        
+        <!-- Name field - full width -->
+        <div class="form-group">
+            <label for="patient-name">Your Name:</label>
+            <input type="text" id="patient-name" name="patient_name" placeholder="Enter your first name" required>
+        </div>
+        
+        <!-- Doctor and Procedure in two columns -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="doctor-select">Select your doctor:</label>
+                {% if auto_select_doctor %}
+                    <div class="auto-selected">
+                        <span class="auto-selected-text">{{ auto_doctor.name }}</span>
+                        <input type="hidden" id="doctor-select" name="doctor_id" value="{{ auto_doctor.id }}" required>
+                    </div>
+                {% else %}
+                    <select id="doctor-select" name="doctor_id" required>
+                        <option value="">Choose your doctor</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="procedure-select">Select your procedure:</label>
+                {% if auto_select_procedure %}
+                    <div class="auto-selected">
+                        <span class="auto-selected-text">{{ auto_procedure.name }}</span>
+                        <input type="hidden" id="procedure-select" name="procedure_id" value="{{ auto_procedure.id }}" required>
+                    </div>
+                {% else %}
+                    <select id="procedure-select" name="procedure_id" required>
+                        <option value="">{% if auto_select_doctor %}Select a procedure{% else %}First select a doctor{% endif %}</option>
+                    </select>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Message section - full width -->
+        <div class="form-group message-section">
+            <label for="message-to-doctor">Message to Doctor (optional):</label>
+            <button type="button" id="toggle-message" class="toggle-btn">+ Add Message</button>
+            <input type="text" id="message-to-doctor" name="message_to_doctor" placeholder="Any message, complaints, or remarks for your doctor..." style="display: none;">
+        </div>
+        
+        <button type="submit" class="continue-btn">Continue</button>
+    </form>
+    
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorSelect = document.getElementById('doctor-select');
+    const procedureSelect = document.getElementById('procedure-select');
+    const toggleMessageBtn = document.getElementById('toggle-message');
+    const messageTextarea = document.getElementById('message-to-doctor');
+    
+    // Toggle message textarea visibility
+    toggleMessageBtn.addEventListener('click', function() {
+        if (messageTextarea.style.display === 'none') {
+            messageTextarea.style.display = 'block';
+            toggleMessageBtn.textContent = '- Hide Message';
+        } else {
+            messageTextarea.style.display = 'none';
+            toggleMessageBtn.textContent = '+ Add Message';
+        }
+    });
+    
+    // Function to load procedures for a doctor
+    async function loadProcedures(doctorId) {
+        if (!doctorId) {
+            procedureSelect.innerHTML = '<option value="">First select a doctor</option>';
+            return;
+        }
+        
+        // Clear procedure options
+        procedureSelect.innerHTML = '<option value="">Loading...</option>';
+        
+        try {
+            const response = await fetch(`/api/doctors/${doctorId}/procedures`);
+            const procedures = await response.json();
+            
+            // Clear and populate procedure options
+            procedureSelect.innerHTML = '<option value="">Select a procedure</option>';
+            procedures.forEach(procedure => {
+                const option = document.createElement('option');
+                option.value = procedure.id;
+                option.textContent = procedure.name;
+                procedureSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error fetching procedures:', error);
+            procedureSelect.innerHTML = '<option value="">Error loading procedures</option>';
+        }
+    }
+    
+    // Update procedures when doctor is selected (only if doctor select is a dropdown)
+    if (doctorSelect && doctorSelect.tagName === 'SELECT') {
+        doctorSelect.addEventListener('change', function() {
+            loadProcedures(this.value);
+        });
+    }
+    
+    // Auto-load procedures if doctor is auto-selected
+    const autoDoctorId = document.getElementById('patient-form').getAttribute('data-auto-doctor-id');
+    if (autoDoctorId) {
+        loadProcedures(autoDoctorId);
+    }
+    
+    // Form validation
+    document.getElementById('patient-form').addEventListener('submit', function(e) {
+        const patientName = document.getElementById('patient-name').value.trim();
+        const doctorId = document.getElementById('doctor-select').value;
+        const procedureId = document.getElementById('procedure-select').value;
+        
+        if (!patientName || !doctorId || !procedureId) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+        }
+    });
+});
+</script>
+{% endblock %} 
