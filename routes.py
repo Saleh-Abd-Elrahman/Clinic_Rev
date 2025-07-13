@@ -272,6 +272,7 @@ async def generate_reviews(
     rating: int = Form(...),
     selected_factors: List[str] = Form([]),
     additional_comments: str = Form(""),
+    message_to_doctor: str = Form(""),
     db: Session = Depends(get_db)
 ):
     auth_result = check_auth(request)
@@ -327,6 +328,7 @@ async def generate_reviews(
         "rating": rating,
         "selected_factors": selected_factors,
         "additional_comments": additional_comments,
+        "message_to_doctor": message_to_doctor,
         "ai_reviews": ai_reviews
     }
     

@@ -1,109 +1,79 @@
 {% extends "base.html" %}
 
-{% block title %}Generating Reviews{% endblock %}
+{% block title %}Message to Doctor{% endblock %}
 {% block body_class %}review-generating-page{% endblock %}
 
 {% block content %}
-<div class="generating-section">
-    <div class="generating-content">
-        <div class="loading-animation">
-            <div class="spinner"></div>
+<div class="message-section">
+    <div class="message-content">
+        <h1>💬 Message to Doctor (Optional)</h1>
+        <h2>Would you like to share any personal feedback with {{ doctor_name }}?</h2>
+        
+        <div class="message-info">
+            <p>This message is private and will only be visible to the doctor. It won't affect your public review.</p>
         </div>
         
-        <h1>🤖 Generating Your Reviews</h1>
-        <h2>Our AI is creating personalized review options for you...</h2>
-        
-        <div class="progress-steps">
-            <div class="step active">
-                <div class="step-icon">📝</div>
-                <div class="step-text">Analyzing your feedback</div>
+        <form method="post" action="/generate-reviews" id="message-form">
+            <!-- Hidden form fields from previous step -->
+            <input type="hidden" name="session_data" value="{{ form_data.session_data }}">
+            <input type="hidden" name="rating" value="{{ form_data.rating }}">
+            {% for factor in form_data.selected_factors %}
+            <input type="hidden" name="selected_factors" value="{{ factor }}">
+            {% endfor %}
+            <input type="hidden" name="additional_comments" value="{{ form_data.additional_comments }}">
+            
+            <div class="form-group">
+                <label for="message-to-doctor">Your Message (Optional):</label>
+                <textarea 
+                    id="message-to-doctor" 
+                    name="message_to_doctor" 
+                    placeholder="Share any personal feedback, concerns, or remarks for the doctor..."
+                    rows="6"
+                ></textarea>
+                <small>This could include specific concerns, improvement suggestions, or personal notes that you'd like the doctor to know about.</small>
             </div>
-            <div class="step">
-                <div class="step-icon">🧠</div>
-                <div class="step-text">Generating review options</div>
+            
+            <div class="button-group">
+                <button type="button" id="skip-btn" class="skip-btn">Skip Message</button>
+                <button type="submit" class="continue-btn">Continue to Reviews</button>
             </div>
-            <div class="step">
-                <div class="step-icon">✨</div>
-                <div class="step-text">Finalizing your choices</div>
-            </div>
-        </div>
-        
-        <div class="fun-facts">
-            <p>💡 <strong>Did you know?</strong> Our AI creates unique reviews based on your specific experience with {{ procedure_name }} and {{ doctor_name }}.</p>
-        </div>
+        </form>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let currentStep = 0;
-    const steps = document.querySelectorAll('.step');
+    const messageForm = document.getElementById('message-form');
+    const skipBtn = document.getElementById('skip-btn');
+    const messageTextarea = document.getElementById('message-to-doctor');
     
-    // Animate through the steps
-    function animateSteps() {
-        steps.forEach((step, index) => {
-            if (index <= currentStep) {
-                step.classList.add('active');
-            } else {
-                step.classList.remove('active');
-            }
-        });
+    // Skip button functionality
+    skipBtn.addEventListener('click', function() {
+        messageTextarea.value = '';
+        messageForm.submit();
+    });
+    
+    // Form submission
+    messageForm.addEventListener('submit', function(e) {
+        // Show loading state
+        const continueBtn = document.querySelector('.continue-btn');
+        const originalText = continueBtn.textContent;
+        continueBtn.textContent = 'Generating Reviews...';
+        continueBtn.disabled = true;
         
-        currentStep = (currentStep + 1) % steps.length;
-    }
+        // The form will submit normally
+    });
     
-    // Start step animation
-    setInterval(animateSteps, 2000);
-    
-    // Simulate processing time and redirect
-    setTimeout(function() {
-        // Get the form data from the backend
-        const formData = {{ form_data|tojson if form_data else 'null' }};
-        console.log('Form data received:', formData);
-        
-        if (formData && formData.session_data && formData.rating) {
-            // Submit the form data to generate reviews
-            const data = formData;
-            
-            // Create and submit form
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/generate-reviews';
-            
-            // Add form fields
-            Object.keys(data).forEach(key => {
-                if (Array.isArray(data[key])) {
-                    // Handle arrays (like selected_factors)
-                    data[key].forEach(value => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = key;
-                        input.value = value;
-                        form.appendChild(input);
-                    });
-                } else {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = data[key];
-                    form.appendChild(input);
-                }
-            });
-            
-            console.log('Form created, submitting...');
-            document.body.appendChild(form);
-            form.submit();
-        } else {
-            console.error('No form data received');
-            // Fallback - redirect to main menu
-            window.location.href = '/main-selection';
-        }
-    }, 4000); // Show loading for 4 seconds
+    // Auto-resize textarea
+    messageTextarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
 });
 </script>
 
 <style>
-.generating-section {
+.message-section {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -113,133 +83,152 @@ document.addEventListener('DOMContentLoaded', function() {
     text-align: center;
 }
 
-.generating-content {
+.message-content {
     max-width: 600px;
     padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.generating-content h1 {
+.message-content h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     font-weight: 300;
 }
 
-.generating-content h2 {
+.message-content h2 {
     font-size: 1.3rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     opacity: 0.9;
     font-weight: 300;
 }
 
-.loading-animation {
-    margin-bottom: 3rem;
-}
-
-.spinner {
-    width: 80px;
-    height: 80px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.progress-steps {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 3rem;
-    gap: 2rem;
-}
-
-.step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    opacity: 0.5;
-    transition: all 0.5s ease;
-}
-
-.step.active {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.step-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    background: rgba(255, 255, 255, 0.2);
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.step.active .step-icon {
-    background: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-}
-
-.step-text {
-    font-size: 0.9rem;
-    text-align: center;
-    max-width: 120px;
-}
-
-.fun-facts {
+.message-info {
     background: rgba(255, 255, 255, 0.1);
-    padding: 1.5rem;
-    border-radius: 12px;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.fun-facts p {
+.message-info p {
     margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
     font-size: 1rem;
-    line-height: 1.5;
+    resize: vertical;
+    min-height: 120px;
+    transition: all 0.3s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    line-height: 1.4;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.skip-btn, .continue-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.skip-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.skip-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.continue-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: 2px solid #4CAF50;
+}
+
+.continue-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.continue-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
 }
 
 @media (max-width: 768px) {
-    .generating-content {
-        padding: 1rem;
+    .message-content {
+        padding: 1.5rem;
+        margin: 1rem;
     }
     
-    .generating-content h1 {
+    .message-content h1 {
         font-size: 2rem;
     }
     
-    .generating-content h2 {
+    .message-content h2 {
         font-size: 1.1rem;
     }
     
-    .progress-steps {
+    .button-group {
         flex-direction: column;
-        gap: 1rem;
     }
     
-    .step {
-        flex-direction: row;
-        text-align: left;
-    }
-    
-    .step-icon {
-        margin-bottom: 0;
-        margin-right: 1rem;
-        width: 50px;
-        height: 50px;
-        font-size: 1.5rem;
-    }
-    
-    .step-text {
-        max-width: none;
+    .skip-btn, .continue-btn {
+        width: 100%;
     }
 }
 </style>

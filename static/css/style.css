@@ -127,7 +127,7 @@
     text-align: center;
     backdrop-filter: blur(12px);
     background: var(--card-bg);
-    padding: 3rem 4rem;
+    padding: 2rem 3rem;
     border-radius: 24px;
     box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
     animation: fadeIn 1.2s ease;
@@ -141,7 +141,7 @@
   
   h1 {
     font-size: 2.6rem;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.2rem;
     font-weight: 600;
   }
   .title-color {
@@ -150,7 +150,7 @@
   .login-box {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 1rem;
   }
   
   label {
@@ -222,7 +222,7 @@
   
   /* Hub container and layout */
   .hub-container {
-    padding: 3rem 2rem;
+    padding: 2rem 2rem;
     max-width: 1000px;
     text-align: center;
     backdrop-filter: blur(12px);
@@ -240,7 +240,7 @@
   
   .hub-subtitle {
     font-size: 1.1rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     opacity: 0.8;
     color: var(--text);
   }
@@ -249,7 +249,7 @@
   .card-grid {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
     align-items: center;
     justify-content: center;
   }
@@ -266,7 +266,7 @@
     backdrop-filter: blur(30px);
     border: none;
     border-radius: 20px;
-    padding: 2rem 2.5rem;
+    padding: 1.5rem 2rem;
     width: 100%;
     max-width: 400px;
     text-align: left;
@@ -296,7 +296,7 @@
   
   /* Logout button */
   .logout-button {
-    margin-top: 3rem;
+    margin-top: 2rem;
     background: var(--accent2);
     color: white;
     padding: 0.8rem 1.8rem;
@@ -323,7 +323,7 @@
   /* ===== ADMIN DASHBOARD STYLES ===== */
   
   .admin-container {
-    padding: 3rem 2rem;
+    padding: 2rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
     backdrop-filter: blur(12px);
@@ -337,7 +337,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
   }
   
   .admin-title {
@@ -350,14 +350,14 @@
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
   }
   
   .stat-card {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
-    padding: 1.5rem;
+    padding: 1.2rem;
     border-radius: 16px;
     text-align: center;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
@@ -388,14 +388,14 @@
   .admin-nav-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
   }
   
   .admin-nav-card {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -424,14 +424,14 @@
   .recent-reviews-section {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 20px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   }
   
   .recent-reviews-section h3 {
     color: var(--title);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-size: 1.4rem;
   }
   
@@ -507,15 +507,15 @@
   .form-section {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 20px;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   }
   
   .form-section h3 {
     color: var(--title);
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     font-size: 1.3rem;
   }
   
@@ -569,23 +569,22 @@
   /* Survey Sections */
   .survey-section {
     background: var(--card-bg);
-    backdrop-filter: blur(20px);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 20px;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   }
   
   .survey-section h3 {
     color: var(--title);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
     font-size: 1.3rem;
   }
   
   .section-description {
     color: var(--text);
     opacity: 0.8;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-size: 0.95rem;
   }
   
@@ -594,16 +593,16 @@
   .procedures-section {
     background: var(--card-bg);
     backdrop-filter: blur(20px);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 20px;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   }
   
   .doctors-section h3,
   .procedures-section h3 {
     color: var(--title);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-size: 1.3rem;
   }
   
@@ -616,7 +615,7 @@
   }
   
   .doctor-header {
-    padding: 1.5rem;
+    padding: 1.2rem;
     background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
     display: flex;
@@ -642,7 +641,7 @@
   }
   
   .procedures-list {
-    padding: 1.5rem;
+    padding: 1.2rem;
     background: rgba(255, 255, 255, 0.02);
   }
   
@@ -710,10 +709,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
+    padding: 1.2rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
@@ -735,10 +734,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
+    padding: 1.2rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
@@ -765,12 +764,12 @@
   }
   
   .message-info {
-    padding: 1.5rem;
+    padding: 1.2rem;
   }
   
   .message-info h4 {
     color: var(--title);
-    margin: 0 0 0.8rem 0;
+    margin: 0 0 0.6rem 0;
     font-size: 1.1rem;
   }
   
@@ -785,7 +784,7 @@
   }
   
   .message-actions {
-    padding: 1rem 1.5rem;
+    padding: 0.8rem 1.2rem;
     background: rgba(255, 255, 255, 0.02);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
@@ -794,20 +793,20 @@
   .reviews-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
   }
   
   .review-card {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
   }
   
   .review-header {
-    padding: 1.5rem;
+    padding: 1.2rem;
     background: rgba(255, 255, 255, 0.05);
     display: flex;
     justify-content: space-between;
@@ -826,7 +825,7 @@
   }
   
   .review-details {
-    padding: 1.5rem;
+    padding: 1.2rem;
   }
   
   .review-info,
@@ -835,7 +834,7 @@
   .review-message,
   .review-factors,
   .review-final {
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
   }
   
   .review-info p,
@@ -872,7 +871,7 @@
   }
   
   .review-actions {
-    padding: 1rem 1.5rem;
+    padding: 0.8rem 1.2rem;
     background: rgba(255, 255, 255, 0.02);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }

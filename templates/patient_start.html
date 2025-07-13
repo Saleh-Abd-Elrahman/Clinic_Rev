@@ -1,22 +1,332 @@
 {% extends "base.html" %}
 
-{% block title %}Patient Information{% endblock %}
+{% block title %}Patient Intake ✨{% endblock %}
 {% block body_class %}patient-survey-page{% endblock %}
 
 {% block extra_css %}
 <style>
-/* iPad-optimized styling for toggle button and auto-selection */
+/* Override base styles for this specific page */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    height: 100vh;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: background 0.4s ease;
+    color: var(--text);
+}
+
+/* New modern design styles */
+:root {
+    --bg: #FFF7F4;
+    --card-bg: rgba(255, 255, 255, 0.65);
+    --text: #7D635C;
+    --title: #B85D79;
+    --accent1: #B85D79;
+    --accent2: #992E4F;
+    --input-bg: #F8F6F3;
+    --glow: #F6EBE7;
+}
+
+body.dark {
+    --bg: #2e2e2e;
+    --card-bg: rgba(30, 30, 30, 0.7);
+    --text: #F4EFE9;
+    --title: #DBB3A9;
+    --accent1: #992E4F;
+    --accent2: #B85D79;
+    --input-bg: #3a3a3a;
+    --glow: #7D635C;
+}
+
+.toggle-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 10;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input { display: none; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent1);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--glow), transparent 70%);
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 6s ease-in-out infinite;
+    filter: blur(60px);
+}
+
+.float-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.25;
+    animation: float 20s infinite ease-in-out;
+    filter: blur(30px);
+}
+
+.pink {
+    width: 250px;
+    height: 250px;
+    background: #ECD9D2;
+    top: 20%;
+    left: 10%;
+}
+
+.wine {
+    width: 300px;
+    height: 300px;
+    background: #992E4F;
+    bottom: 15%;
+    right: 10%;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-30px); }
+    100% { transform: translateY(0); }
+}
+
+.container {
+    text-align: center;
+    backdrop-filter: blur(12px);
+    background: var(--card-bg);
+    padding: 2rem 3rem;
+    border-radius: 24px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 1.2s ease;
+    transition: background 0.4s ease;
+    max-width: 600px;
+    width: 90%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+    font-size: 2.6rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.title-color {
+    color: var(--title);
+}
+
+.subtitle {
+    opacity: 0.8;
+    margin-bottom: 1.5rem;
+}
+
+.login-box {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+label {
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: left;
+}
+
+input[type="text"], select {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    background: var(--input-bg);
+    font-size: 1rem;
+    color: var(--text);
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input:focus, select:focus {
+    border-color: var(--accent1);
+    box-shadow: 0 0 0 3px #ffe0ef80;
+}
+
+.option-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.option-pill {
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #ccc;
+}
+
+.option-pill:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.option-pill input {
+    display: none;
+}
+
+.emoji-group label {
+    font-size: 1.8rem;
+}
+
+.language-selector {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.language-selector input {
+    display: none;
+}
+
+.language-selector label {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+}
+
+.language-selector input:checked + label {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--accent1);
+}
+
+button {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border: none;
+    color: white;
+    padding: 0.9rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+}
+
+button:hover {
+    transform: scale(1.03);
+}
+
+/* Auto-selected styling */
+.auto-selected {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 2px solid var(--accent1) !important;
+    border-radius: 12px !important;
+    padding: 0.8rem 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+    min-height: 44px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.auto-selected::before {
+    content: "✓" !important;
+    color: white !important;
+    font-weight: bold !important;
+    margin-right: 12px !important;
+    background: var(--accent1) !important;
+    border-radius: 50% !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.9rem !important;
+    flex-shrink: 0 !important;
+}
+
+.auto-selected-text {
+    font-weight: 500 !important;
+    color: var(--text) !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+}
+
+/* Message toggle button */
 .toggle-btn {
-    background: #f8f9fa !important;
-    color: #6c757d !important;
-    padding: 12px 24px !important;
-    border: 2px solid #dee2e6 !important;
-    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    color: var(--text) !important;
+    padding: 0.6rem 1.2rem !important;
+    border: 1px solid #ccc !important;
+    border-radius: 999px !important;
     cursor: pointer !important;
-    font-size: 1.1rem !important;
+    font-size: 0.9rem !important;
     font-weight: 500 !important;
     transition: all 0.2s ease !important;
-    margin-bottom: 16px !important;
+    margin-bottom: 1rem !important;
     display: inline-block !important;
     text-decoration: none !important;
     line-height: 1.5 !important;
@@ -26,235 +336,154 @@
 }
 
 .toggle-btn:hover, .toggle-btn:active {
-    background: #e9ecef !important;
-    color: #495057 !important;
-    border-color: #adb5bd !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    transform: scale(1.05) !important;
 }
 
-.auto-selected {
-    background: #f8f9fa !important;
-    border: 2px solid #e1e5e9 !important;
-    border-radius: 12px !important;
-    padding: 20px 24px !important;
-    display: flex !important;
-    align-items: center !important;
-    position: relative !important;
-    transition: all 0.2s ease !important;
-    min-height: 60px !important;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
-    margin-bottom: 8px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+/* Navigation */
+.navigation {
+    margin-top: 1.5rem;
 }
 
-.auto-selected::before {
-    content: "✓" !important;
-    color: #28a745 !important;
-    font-weight: bold !important;
-    margin-right: 16px !important;
-    background: #28a745 !important;
-    color: white !important;
-    border-radius: 50% !important;
-    width: 28px !important;
-    height: 28px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1rem !important;
-    flex-shrink: 0 !important;
-}
-
-.auto-selected-text {
-    font-weight: 500 !important;
-    color: #495057 !important;
-    font-size: 1.2rem !important;
-    line-height: 1.5 !important;
-    margin: 0 !important;
-}
-
-/* iPad-specific form improvements - Larger elements */
-.form-group input, .form-group select {
-    font-size: 1.3rem !important;
-    padding: 20px 24px !important;
-    min-height: 60px !important;
-    border-radius: 12px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-.form-group label {
-    font-size: 1.3rem !important;
-    margin-bottom: 12px !important;
-    font-weight: 600 !important;
-    display: block !important;
-}
-
-.continue-btn {
-    font-size: 1.4rem !important;
-    padding: 24px 48px !important;
-    min-height: 70px !important;
-    border-radius: 15px !important;
-    width: 100% !important;
-    margin-top: 20px !important;
-    font-weight: 600 !important;
-}
-
-/* Full-screen landscape layout for iPad */
-.patient-section {
-    padding: 40px 60px !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
-}
-
-.form-group {
-    margin-bottom: 32px !important;
-    width: 100% !important;
-}
-
-/* Two-column layout for form fields */
-.form-row {
-    display: flex !important;
-    gap: 32px !important;
-    margin-bottom: 32px !important;
-    width: 100% !important;
-}
-
-.form-row .form-group {
-    flex: 1 !important;
-    margin-bottom: 0 !important;
-}
-
-/* Full-width message section */
-.message-section {
-    margin-top: 16px !important;
-}
-
-/* Touch-friendly navigation */
 .back-btn {
-    font-size: 1.1rem !important;
-    padding: 12px 20px !important;
-    min-height: 44px !important;
+    background: var(--accent2);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-block;
 }
 
-/* Responsive design for different screen sizes */
+.back-btn:hover {
+    background: #7d2a40;
+    transform: scale(1.03);
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-    .form-row {
-        flex-direction: column !important;
-        gap: 16px !important;
+    .container {
+        padding: 2rem;
+        width: 95%;
     }
     
-    .patient-section {
-        padding: 20px !important;
-        width: 100vw !important;
-        height: 100vh !important;
+    h1 {
+        font-size: 2rem;
     }
     
-    .form-group input, .form-group select {
-        font-size: 1rem !important;
-        padding: 12px 16px !important;
-    }
-}
-
-@media (min-width: 1024px) {
-    .patient-section {
-        width: 100vw !important;
-        height: 100vh !important;
-        padding: 60px 80px !important;
+    .option-group {
+        flex-direction: column;
+        align-items: center;
     }
     
-    .form-row {
-        gap: 40px !important;
+    .language-selector {
+        flex-direction: column;
+        align-items: center;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="patient-section">
-    <h1>👋 Welcome!</h1>
-    <h2>Please enter your information</h2>
-    
-    <form method="post" action="/patient-details" id="patient-form" 
-          data-auto-doctor-id="{% if auto_select_doctor and not auto_select_procedure %}{{ auto_doctor.id }}{% endif %}">
-        
-        <!-- Name field - full width -->
-        <div class="form-group">
-            <label for="patient-name">Your Name:</label>
-            <input type="text" id="patient-name" name="patient_name" placeholder="Enter your first name" required>
-        </div>
-        
-        <!-- Doctor and Procedure in two columns -->
-        <div class="form-row">
-            <div class="form-group">
-                <label for="doctor-select">Select your doctor:</label>
-                {% if auto_select_doctor %}
-                    <div class="auto-selected">
-                        <span class="auto-selected-text">{{ auto_doctor.name }}</span>
-                        <input type="hidden" id="doctor-select" name="doctor_id" value="{{ auto_doctor.id }}" required>
-                    </div>
-                {% else %}
-                    <select id="doctor-select" name="doctor_id" required>
-                        <option value="">Choose your doctor</option>
-                        {% for doctor in doctors %}
-                        <option value="{{ doctor.id }}">{{ doctor.name }}</option>
-                        {% endfor %}
-                    </select>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label for="procedure-select">Select your procedure:</label>
-                {% if auto_select_procedure %}
-                    <div class="auto-selected">
-                        <span class="auto-selected-text">{{ auto_procedure.name }}</span>
-                        <input type="hidden" id="procedure-select" name="procedure_id" value="{{ auto_procedure.id }}" required>
-                    </div>
-                {% else %}
-                    <select id="procedure-select" name="procedure_id" required>
-                        <option value="">{% if auto_select_doctor %}Select a procedure{% else %}First select a doctor{% endif %}</option>
-                    </select>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Message section - full width -->
-        <div class="form-group message-section">
-            <label for="message-to-doctor">Message to Doctor (optional):</label>
-            <button type="button" id="toggle-message" class="toggle-btn">+ Add Message</button>
-            <input type="text" id="message-to-doctor" name="message_to_doctor" placeholder="Any message, complaints, or remarks for your doctor..." style="display: none;">
-        </div>
-        
-        <button type="submit" class="continue-btn">Continue</button>
-    </form>
-    
-    <div class="navigation">
-        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
-    </div>
+<div class="background">
+    <div class="glow"></div>
+    <div class="float-circle pink"></div>
+    <div class="float-circle wine"></div>
 </div>
 
+<div class="toggle-wrapper">
+    <label class="switch">
+        <input type="checkbox" id="darkToggle" />
+        <span class="slider"></span>
+    </label>
+</div>
+
+<h1 class="title-color">Patient Intake 🌸</h1>
+<p class="subtitle">Fill in the patient details for review preparation</p>
+
+<form method="post" action="/patient-details" id="patient-form" 
+      data-auto-doctor-id="{% if auto_select_doctor and not auto_select_procedure %}{{ auto_doctor.id }}{% endif %}">
+    
+    <div class="login-box">
+        <label for="patient-name">Patient Name</label>
+        <input type="text" id="patient-name" name="patient_name" placeholder="Enter full name" required />
+        
+        <label for="doctor-select">Select your doctor:</label>
+        {% if auto_select_doctor %}
+            <div class="auto-selected">
+                <span class="auto-selected-text">{{ auto_doctor.name }}</span>
+                <input type="hidden" id="doctor-select" name="doctor_id" value="{{ auto_doctor.id }}" required>
+            </div>
+        {% else %}
+            <select id="doctor-select" name="doctor_id" required>
+                <option value="">Choose your doctor</option>
+                {% for doctor in doctors %}
+                <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+        
+        <label for="procedure-select">Select your procedure:</label>
+        {% if auto_select_procedure %}
+            <div class="auto-selected">
+                <span class="auto-selected-text">{{ auto_procedure.name }}</span>
+                <input type="hidden" id="procedure-select" name="procedure_id" value="{{ auto_procedure.id }}" required>
+            </div>
+        {% else %}
+            <select id="procedure-select" name="procedure_id" required>
+                <option value="">{% if auto_select_doctor %}Select a procedure{% else %}First select a doctor{% endif %}</option>
+            </select>
+        {% endif %}
+        
+        <label>Patient Status</label>
+        <div class="option-group">
+            <label class="option-pill">
+                <input type="radio" name="status" value="new" checked />
+                New
+            </label>
+            <label class="option-pill">
+                <input type="radio" name="status" value="returning" />
+                Returning
+            </label>
+        </div>
+        
+        <label>Mood</label>
+        <div class="option-group emoji-group">
+            <label class="emoji-pill">😊<input type="radio" name="mood" value="happy" /></label>
+            <label class="emoji-pill">😐<input type="radio" name="mood" value="neutral" /></label>
+            <label class="emoji-pill">😞<input type="radio" name="mood" value="sad" /></label>
+        </div>
+        
+        <label>Preferred Language</label>
+        <div class="language-selector">
+            <input type="radio" id="lang-en" name="language" value="English" checked />
+            <label for="lang-en">English</label>
+            <input type="radio" id="lang-ar" name="language" value="Arabic" />
+            <label for="lang-ar">العربية</label>
+        </div>
+        
+        <button type="submit">Continue</button>
+    </div>
+</form>
+
+<div class="navigation">
+    <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const doctorSelect = document.getElementById('doctor-select');
     const procedureSelect = document.getElementById('procedure-select');
-    const toggleMessageBtn = document.getElementById('toggle-message');
-    const messageTextarea = document.getElementById('message-to-doctor');
+    const darkToggle = document.getElementById('darkToggle');
     
-    // Toggle message textarea visibility
-    toggleMessageBtn.addEventListener('click', function() {
-        if (messageTextarea.style.display === 'none') {
-            messageTextarea.style.display = 'block';
-            toggleMessageBtn.textContent = '- Hide Message';
-        } else {
-            messageTextarea.style.display = 'none';
-            toggleMessageBtn.textContent = '+ Add Message';
-        }
+    // Dark mode toggle
+    darkToggle.addEventListener('change', function() {
+        document.body.classList.toggle('dark');
     });
     
     // Function to load procedures for a doctor

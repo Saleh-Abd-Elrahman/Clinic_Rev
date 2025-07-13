@@ -4,15 +4,28 @@
 {% block body_class %}patient-survey-page{% endblock %}
 
 {% block content %}
-<div class="survey-section">
-    <h1>📝 Quick Feedback</h1>
-    <h2>How was your experience?</h2>
+<div class="background">
+    <div class="glow"></div>
+    <div class="float-circle pink"></div>
+    <div class="float-circle wine"></div>
+</div>
+
+<div class="toggle-wrapper">
+    <label class="switch">
+        <input type="checkbox" id="darkToggle" />
+        <span class="slider"></span>
+    </label>
+</div>
+
+<div class="container">
+    <h1 class="title-color">📝 Quick Feedback</h1>
+    <h2 class="subtitle">How was your experience?</h2>
     
     <form method="post" action="/review-generating" id="survey-form">
         <input type="hidden" name="session_data" id="session-data-input">
         
         <div class="form-group">
-            <label>Overall Rating:</label>
+            <label class="form-label">Overall Rating:</label>
             <div class="rating-group">
                 <label class="star-rating">
                     <input type="radio" name="rating" value="1">
@@ -38,7 +51,7 @@
         </div>
         
         <div class="form-group">
-            <label>What stood out about your experience? (Select all that apply)</label>
+            <label class="form-label">What stood out about your experience? (Select all that apply)</label>
             <div class="checkbox-group">
                 {% for factor in factors %}
                 <label class="factor-checkbox">
@@ -50,9 +63,16 @@
         </div>
         
         <div class="form-group">
-            <label for="additional-comments">Additional Comments (optional):</label>
+            <label class="form-label">Additional Comments (Optional):</label>
+            <div class="comments-info">
+                <p>💡 Share specific details to help generate a personalized review. Concerns can be sent privately to the doctor later.</p>
+            </div>
             <button type="button" id="toggle-comments" class="toggle-btn">+ Add Comments</button>
             <textarea id="additional-comments" name="additional_comments" placeholder="Share any specific details about your experience..." style="display: none;"></textarea>
+        </div>
+        
+        <div class="feedback-note">
+            <p>🔒 Private concerns can be sent to the doctor in the next step.</p>
         </div>
         
         <button type="submit" class="generate-btn">Generate Review Options</button>
@@ -65,6 +85,13 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const darkToggle = document.getElementById('darkToggle');
+    
+    // Dark mode toggle
+    darkToggle.addEventListener('change', function() {
+        document.body.classList.toggle('dark');
+    });
+    
     // Load session data from sessionStorage
     const sessionData = sessionStorage.getItem('patientSessionData');
     console.log('Session data from storage:', sessionData);
@@ -84,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (commentsTextarea.style.display === 'none') {
             commentsTextarea.style.display = 'block';
             toggleCommentsBtn.textContent = '- Hide Comments';
+            commentsTextarea.focus();
         } else {
             commentsTextarea.style.display = 'none';
             toggleCommentsBtn.textContent = '+ Add Comments';
@@ -149,48 +177,275 @@ document.addEventListener('DOMContentLoaded', function() {
             r.classList.add('highlighted');
         }
     });
+    
+    // Adjust checkbox grid columns based on number of factors
+    const factorCheckboxes = document.querySelectorAll('.factor-checkbox');
+    const checkboxGroup = document.querySelector('.checkbox-group');
+    
+    if (factorCheckboxes.length > 6) {
+        checkboxGroup.style.gridTemplateColumns = 'repeat(3, 1fr)';
+        checkboxGroup.classList.add('three-columns');
+    } else if (factorCheckboxes.length > 3) {
+        checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
+        checkboxGroup.classList.remove('three-columns');
+    } else {
+        checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
+        checkboxGroup.classList.remove('three-columns');
+    }
+    
+    // Responsive adjustment for mobile
+    function adjustGridForScreen() {
+        if (window.innerWidth <= 768) {
+            if (factorCheckboxes.length > 4) {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            } else {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            }
+        } else {
+            if (factorCheckboxes.length > 6) {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                checkboxGroup.classList.add('three-columns');
+            } else if (factorCheckboxes.length > 3) {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            } else {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            }
+        }
+    }
+    
+    // Initial adjustment
+    adjustGridForScreen();
+    
+    // Adjust on window resize
+    window.addEventListener('resize', adjustGridForScreen);
 });
 </script>
 
 <style>
-.survey-section {
+/* Override base styles for this specific page */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    height: 100vh;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: background 0.4s ease;
+    color: var(--text);
+}
+
+/* CSS Variables */
+:root {
+    --bg: #FFF7F4;
+    --card-bg: rgba(255, 255, 255, 0.65);
+    --text: #7D635C;
+    --title: #B85D79;
+    --accent1: #B85D79;
+    --accent2: #992E4F;
+    --input-bg: #F8F6F3;
+    --glow: #F6EBE7;
+}
+
+body.dark {
+    --bg: #2e2e2e;
+    --card-bg: rgba(30, 30, 30, 0.7);
+    --text: #F4EFE9;
+    --title: #DBB3A9;
+    --accent1: #992E4F;
+    --accent2: #B85D79;
+    --input-bg: #3a3a3a;
+    --glow: #7D635C;
+}
+
+.toggle-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 10;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input { display: none; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent1);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--glow), transparent 70%);
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 6s ease-in-out infinite;
+    filter: blur(60px);
+}
+
+.float-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.25;
+    animation: float 20s infinite ease-in-out;
+    filter: blur(30px);
+}
+
+.pink {
+    width: 250px;
+    height: 250px;
+    background: #ECD9D2;
+    top: 20%;
+    left: 10%;
+}
+
+.wine {
+    width: 300px;
+    height: 300px;
+    background: #992E4F;
+    bottom: 15%;
+    right: 10%;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-30px); }
+    100% { transform: translateY(0); }
+}
+
+.container {
+    text-align: center;
+    backdrop-filter: blur(12px);
+    background: var(--card-bg);
+    padding: 2rem 3rem;
+    border-radius: 24px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 1.2s ease;
+    transition: background 0.4s ease;
     max-width: 700px;
-    margin: 0 auto;
-    padding: 2rem;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+    font-size: 2.6rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.title-color {
+    color: var(--title);
+}
+
+.subtitle {
+    opacity: 0.8;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    color: var(--text);
 }
 
 .form-group {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
+    color: var(--text);
 }
 
 .rating-group {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     margin-top: 1rem;
-    flex-wrap: wrap;
     justify-content: center;
+    flex-wrap: nowrap;
 }
 
 .star-rating {
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 8px;
+    padding: 0.6rem;
+    border-radius: 12px;
     transition: all 0.3s ease;
     border: 2px solid transparent;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    min-width: 50px;
 }
 
 .star-rating:hover {
-    background-color: #f0f7ff;
-    border-color: #1a73e8;
+    background: rgba(255, 255, 255, 0.5);
+    border-color: var(--accent1);
+    transform: scale(1.05);
 }
 
 .star-rating.selected {
-    background-color: #e3f2fd;
-    border-color: #1a73e8;
+    background: rgba(184, 93, 121, 0.2);
+    border-color: var(--accent1);
+    box-shadow: 0 4px 12px rgba(184, 93, 121, 0.3);
 }
 
 .star-rating.highlighted {
-    background-color: #fff3e0;
+    background: rgba(255, 243, 224, 0.6);
 }
 
 .star-rating input {
@@ -205,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .checkbox-group {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
     margin-top: 1rem;
 }
@@ -213,84 +468,181 @@ document.addEventListener('DOMContentLoaded', function() {
 .factor-checkbox {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
 }
 
 .factor-checkbox:hover {
-    border-color: #1a73e8;
-    background-color: #f0f7ff;
+    border-color: var(--accent1);
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
 }
 
 .factor-checkbox input:checked + .checkmark {
     font-weight: bold;
-    color: #1a73e8;
+    color: var(--accent1);
 }
 
 .factor-checkbox input:checked {
-    accent-color: #1a73e8;
+    accent-color: var(--accent1);
+}
+
+.factor-checkbox input:checked ~ * {
+    color: var(--accent1);
+}
+
+/* Smaller text for 3-column layout */
+.checkbox-group.three-columns .factor-checkbox {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+}
+
+.checkbox-group.three-columns .factor-checkbox .checkmark {
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+.comments-info {
+    background: rgba(255, 255, 255, 0.3);
+    padding: 0.8rem;
+    border-radius: 12px;
+    margin-bottom: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.comments-info p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
 }
 
 .toggle-btn {
-    background: #666;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.4);
+    color: var(--text);
+    padding: 0.8rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
     cursor: pointer;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+    display: inline-block;
+    text-decoration: none;
+    line-height: 1.5;
+    min-height: 44px;
+    min-width: 140px;
+    touch-action: manipulation;
 }
 
-.toggle-btn:hover {
-    background: #555;
+.toggle-btn:hover, .toggle-btn:active {
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
 }
 
 textarea {
     width: 100%;
-    min-height: 100px;
-    padding: 0.75rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
+    min-height: 120px;
+    padding: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     font-family: inherit;
     font-size: 1rem;
     resize: vertical;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    transition: all 0.3s ease;
 }
 
 textarea:focus {
     outline: none;
-    border-color: #1a73e8;
+    border-color: var(--accent1);
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 3px rgba(184, 93, 121, 0.1);
+}
+
+textarea::placeholder {
+    color: rgba(125, 99, 92, 0.6);
+}
+
+.feedback-note {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
+    padding: 0.8rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.feedback-note p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
 }
 
 .generate-btn {
-    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    background: linear-gradient(135deg, var(--accent1) 0%, var(--accent2) 100%);
     color: white;
     border: none;
-    padding: 15px 40px;
-    font-size: 1.2rem;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    box-shadow: 0 4px 12px rgba(184, 93, 121, 0.3);
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: 600;
     display: block;
-    margin: 2rem auto;
+    margin: 1.5rem auto;
+    min-width: 200px;
 }
 
 .generate-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(26, 115, 232, 0.4);
+    box-shadow: 0 6px 16px rgba(184, 93, 121, 0.4);
 }
 
+.navigation {
+    margin-top: 1.5rem;
+}
+
+.back-btn {
+    background: var(--accent2);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    background: #7d2a40;
+    transform: scale(1.03);
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-    .survey-section {
-        padding: 1rem;
+    .container {
+        padding: 1.5rem 2rem;
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    h1 {
+        font-size: 2rem;
     }
     
     .rating-group {
@@ -298,12 +650,25 @@ textarea:focus {
     }
     
     .checkbox-group {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
     
     .generate-btn {
-        padding: 12px 30px;
+        padding: 0.9rem 2rem;
         font-size: 1rem;
+    }
+    
+    .stars {
+        font-size: 1.3rem;
+    }
+    
+    .rating-group {
+        gap: 0.3rem;
+    }
+    
+    .star-rating {
+        padding: 0.5rem;
+        min-width: 45px;
     }
 }
 </style>
