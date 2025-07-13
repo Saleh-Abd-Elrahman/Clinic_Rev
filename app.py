@@ -13,7 +13,7 @@ app = FastAPI(title="Clinic Review Kiosk", version="2.0.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Templates
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
 # Initialize database with default data
 def init_db():

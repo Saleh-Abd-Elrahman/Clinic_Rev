@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Form, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from shared import templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models import get_db, Treatment, Doctor, Procedure, Factor, Review, WelcomeMessage, ADMIN_PASSWORD, CLINIC_DATA
@@ -86,7 +86,7 @@ async def generate_ai_reviews(patient_name: str, procedure_name: str, doctor_nam
         ]
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
 # Helper function to generate QR code
 def generate_qr_code(data: str) -> str:
@@ -426,15 +426,24 @@ async def admin_dashboard(request: Request, db: Session = Depends(get_db)):
         .order_by(func.count(Review.id).desc())\
         .first()
     
+    # Create stats object for template
+    stats = {
+        "total_reviews": total_reviews,
+        "average_rating": round(avg_rating, 1),
+        "most_common_factors": {
+            "positive": ["Professional staff", "Clean facility", "Good communication"],
+            "negative": ["Long wait times", "High costs"]
+        }
+    }
+    
     return templates.TemplateResponse("admin.html", {
         "request": request,
         "doctors": doctors,
         "procedures": procedures,
         "factors": factors,
-        "reviews": reviews,
-        "total_reviews": total_reviews,
-        "avg_rating": round(avg_rating, 1),
-        "top_procedure": top_procedure.name if top_procedure else "None"
+        "recent_reviews": reviews,
+        "treatments": db.query(Treatment).all(),
+        "stats": stats
     })
 
 # ============== API ENDPOINTS ==============
@@ -636,3 +645,222 @@ async def delete_treatment(treatment_id: int, db: Session = Depends(get_db)):
     db.delete(treatment)
     db.commit()
     return {"message": "Treatment deleted successfully"}
+
+# ============== ADMIN FORM HANDLING ROUTES ==============
+
+@router.post("/add_treatment")
+async def add_treatment_form(name: str = Form(...), db: Session = Depends(get_db)):
+    treatment = Treatment(name=name)
+    db.add(treatment)
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/delete_treatment/{treatment_id}")
+async def delete_treatment_form(treatment_id: int, db: Session = Depends(get_db)):
+    treatment = db.query(Treatment).filter(Treatment.id == treatment_id).first()
+    if treatment:
+        db.delete(treatment)
+        db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/add_doctor")
+async def add_doctor_form(name: str = Form(...), db: Session = Depends(get_db)):
+    doctor = Doctor(name=name)
+    db.add(doctor)
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/delete_doctor/{doctor_id}")
+async def delete_doctor_form(doctor_id: int, db: Session = Depends(get_db)):
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if doctor:
+        db.delete(doctor)
+        db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/add_procedure")
+async def add_procedure_form(name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
+    procedure = Procedure(name=name, description=description)
+    db.add(procedure)
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/delete_procedure/{procedure_id}")
+async def delete_procedure_form(procedure_id: int, db: Session = Depends(get_db)):
+    procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
+    if procedure:
+        db.delete(procedure)
+        db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/add_factor")
+async def add_factor_form(name: str = Form(...), db: Session = Depends(get_db)):
+    factor = Factor(name=name)
+    db.add(factor)
+    db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+@router.post("/delete_factor/{factor_id}")
+async def delete_factor_form(factor_id: int, db: Session = Depends(get_db)):
+    factor = db.query(Factor).filter(Factor.id == factor_id).first()
+    if factor:
+        db.delete(factor)
+        db.commit()
+    return RedirectResponse(url="/admin", status_code=302)
+
+# ============== ADMIN SUB-PAGE ROUTES ==============
+
+@router.get("/admin/doctors", response_class=HTMLResponse)
+async def admin_doctors(request: Request, db: Session = Depends(get_db)):
+    auth_result = check_auth(request)
+    if auth_result:
+        return auth_result
+    
+    doctors = db.query(Doctor).all()
+    all_procedures = db.query(Procedure).all()
+    
+    return templates.TemplateResponse("admin_doctors.html", {
+        "request": request,
+        "doctors": doctors,
+        "all_procedures": all_procedures
+    })
+
+@router.get("/admin/survey", response_class=HTMLResponse)
+async def admin_survey(request: Request, db: Session = Depends(get_db)):
+    auth_result = check_auth(request)
+    if auth_result:
+        return auth_result
+    
+    factors = db.query(Factor).all()
+    procedures = db.query(Procedure).all()
+    welcome_messages = db.query(WelcomeMessage).all()
+    
+    return templates.TemplateResponse("admin_survey.html", {
+        "request": request,
+        "factors": factors,
+        "procedures": procedures,
+        "welcome_messages": welcome_messages
+    })
+
+@router.get("/admin/reviews", response_class=HTMLResponse)
+async def admin_reviews(request: Request, db: Session = Depends(get_db)):
+    auth_result = check_auth(request)
+    if auth_result:
+        return auth_result
+    
+    reviews = db.query(Review).order_by(Review.created_at.desc()).all()
+    
+    # Calculate stats
+    total_reviews = len(reviews)
+    avg_rating = sum(r.rating for r in reviews) / total_reviews if total_reviews > 0 else 0
+    
+    # Count this month's reviews
+    from datetime import datetime, timedelta
+    this_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    this_month_count = len([r for r in reviews if r.created_at >= this_month])
+    
+    stats = {
+        "total_reviews": total_reviews,
+        "average_rating": round(avg_rating, 1),
+        "this_month": this_month_count
+    }
+    
+    return templates.TemplateResponse("admin_reviews.html", {
+        "request": request,
+        "reviews": reviews,
+        "stats": stats
+    })
+
+# ============== ADDITIONAL FORM ROUTES ==============
+
+@router.post("/add_welcome_message")
+async def add_welcome_message_form(procedure_name: str = Form(...), message: str = Form(...), db: Session = Depends(get_db)):
+    welcome_msg = WelcomeMessage(procedure_name=procedure_name, message=message)
+    db.add(welcome_msg)
+    db.commit()
+    return RedirectResponse(url="/admin/survey", status_code=302)
+
+@router.post("/delete_welcome_message/{message_id}")
+async def delete_welcome_message_form(message_id: int, db: Session = Depends(get_db)):
+    message = db.query(WelcomeMessage).filter(WelcomeMessage.id == message_id).first()
+    if message:
+        db.delete(message)
+        db.commit()
+    return RedirectResponse(url="/admin/survey", status_code=302)
+
+@router.post("/delete_review/{review_id}")
+async def delete_review_form(review_id: int, db: Session = Depends(get_db)):
+    review = db.query(Review).filter(Review.id == review_id).first()
+    if review:
+        db.delete(review)
+        db.commit()
+    return RedirectResponse(url="/admin/reviews", status_code=302)
+
+# Update existing form routes to redirect to correct pages
+@router.post("/add_doctor")
+async def add_doctor_form(name: str = Form(...), db: Session = Depends(get_db)):
+    doctor = Doctor(name=name)
+    db.add(doctor)
+    db.commit()
+    return RedirectResponse(url="/admin/doctors", status_code=302)
+
+@router.post("/delete_doctor/{doctor_id}")
+async def delete_doctor_form(doctor_id: int, db: Session = Depends(get_db)):
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if doctor:
+        db.delete(doctor)
+        db.commit()
+    return RedirectResponse(url="/admin/doctors", status_code=302)
+
+@router.post("/add_procedure")
+async def add_procedure_form(name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
+    procedure = Procedure(name=name, description=description)
+    db.add(procedure)
+    db.commit()
+    return RedirectResponse(url="/admin/doctors", status_code=302)
+
+@router.post("/delete_procedure/{procedure_id}")
+async def delete_procedure_form(procedure_id: int, db: Session = Depends(get_db)):
+    procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
+    if procedure:
+        db.delete(procedure)
+        db.commit()
+    return RedirectResponse(url="/admin/doctors", status_code=302)
+
+@router.post("/add_factor")
+async def add_factor_form(name: str = Form(...), db: Session = Depends(get_db)):
+    factor = Factor(name=name)
+    db.add(factor)
+    db.commit()
+    return RedirectResponse(url="/admin/survey", status_code=302)
+
+@router.post("/delete_factor/{factor_id}")
+async def delete_factor_form(factor_id: int, db: Session = Depends(get_db)):
+    factor = db.query(Factor).filter(Factor.id == factor_id).first()
+    if factor:
+        db.delete(factor)
+        db.commit()
+    return RedirectResponse(url="/admin/survey", status_code=302)
+
+# Doctor-procedure assignment routes
+@router.post("/add_doctor_procedure/{doctor_id}")
+async def add_doctor_procedure_form(doctor_id: int, procedure_id: int = Form(...), db: Session = Depends(get_db)):
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
+    
+    if doctor and procedure and procedure not in doctor.procedures:
+        doctor.procedures.append(procedure)
+        db.commit()
+    
+    return RedirectResponse(url="/admin/doctors", status_code=302)
+
+@router.post("/remove_doctor_procedure/{doctor_id}/{procedure_id}")
+async def remove_doctor_procedure_form(doctor_id: int, procedure_id: int, db: Session = Depends(get_db)):
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
+    
+    if doctor and procedure and procedure in doctor.procedures:
+        doctor.procedures.remove(procedure)
+        db.commit()
+    
+    return RedirectResponse(url="/admin/doctors", status_code=302)

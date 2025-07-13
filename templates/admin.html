@@ -1,511 +1,80 @@
-{% extends "base.html" %}
-
-{% block body_class %}admin-page{% endblock %}
-
-{% block content %}
-<div class="admin-section">
-    <h1>🏥 Admin Dashboard</h1>
-    
-    <div class="dashboard-grid">
-        <div class="dashboard-card" onclick="showSection('doctors')">
-            <h3>👨‍⚕️ Manage Doctors</h3>
-            <p>Add, edit, or remove doctors and their procedures</p>
-        </div>
-        
-        <div class="dashboard-card" onclick="showSection('procedures')">
-            <h3>🔧 Manage Procedures</h3>
-            <p>Add, edit, or remove procedure options</p>
-        </div>
-        
-        <div class="dashboard-card" onclick="showSection('factors')">
-            <h3>⭐ Manage Factors</h3>
-            <p>Configure what stands out options</p>
-        </div>
-        
-        <div class="dashboard-card" onclick="showSection('analytics')">
-            <h3>📊 View Analytics</h3>
-            <p>Review patient feedback and statistics</p>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard 🎀</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="blur-glow pink-blur"></div>
+        <div class="blur-glow purple-blur"></div>
     </div>
     
-    <!-- Treatment Management -->
-    <div id="treatments-section" class="management-section" style="display: none;">
-        <h2>🔧 Treatment Management</h2>
-        
-        <div class="add-form">
-            <h3>Add New Treatment</h3>
-            <form id="add-treatment-form">
-                <input type="text" id="new-treatment" placeholder="Treatment name" required>
-                <button type="submit">Add Treatment</button>
+    <div class="toggle-wrapper">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">Admin Dashboard 🎀</h1>
+            <form action="/logout" method="POST" style="display: inline;">
+                <button type="submit" class="logout-button">🚪 Logout</button>
             </form>
         </div>
         
-        <div class="items-list">
-            <h3>Current Treatments</h3>
-            <div id="treatments-list">
-                {% for treatment in treatments %}
-                                 <div class="item-entry">
-                     <span class="item-name">{{ treatment.name }}</span>
-                     <div class="item-actions">
-                         <button class="edit-treatment-btn" data-id="{{ treatment.id }}" data-name="{{ treatment.name }}">Edit</button>
-                         <button class="delete-treatment-btn" data-id="{{ treatment.id }}">Delete</button>
-                     </div>
-                 </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <button onclick="showDashboard()" class="back-btn">← Back to Dashboard</button>
-    </div>
-    
-    <!-- Doctor Management -->
-    <div id="doctors-section" class="management-section" style="display: none;">
-        <h2>👨‍⚕️ Doctor Management</h2>
-        
-        <div class="add-form">
-            <h3>Add New Doctor</h3>
-            <form id="add-doctor-form">
-                <input type="text" id="new-doctor" placeholder="Doctor name" required>
-                <button type="submit">Add Doctor</button>
-            </form>
-        </div>
-        
-        <div class="items-list">
-            <h3>Current Doctors</h3>
-            <div id="doctors-list">
-                {% for doctor in doctors %}
-                <div class="item-entry doctor-entry" data-doctor-id="{{ doctor.id }}">
-                    <div class="item-details">
-                     <span class="item-name">{{ doctor.name }}</span>
-                        <div class="doctor-procedures">
-                            <small>Procedures: 
-                                {% if doctor.procedures %}
-                                    {% for procedure in doctor.procedures %}
-                                        {{ procedure.name }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
-                                {% else %}
-                                    None assigned
-                                {% endif %}
-                            </small>
-                        </div>
-                    </div>
-                     <div class="item-actions">
-                        <button class="manage-procedures-btn" data-id="{{ doctor.id }}">Manage Procedures</button>
-                         <button class="edit-doctor-btn" data-id="{{ doctor.id }}" data-name="{{ doctor.name }}">Edit</button>
-                         <button class="delete-doctor-btn" data-id="{{ doctor.id }}">Delete</button>
-                     </div>
-                 </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <button onclick="showDashboard()" class="back-btn">← Back to Dashboard</button>
-    </div>
-    
-    <!-- Procedure Management -->
-    <div id="procedures-section" class="management-section" style="display: none;">
-        <h2>🔧 Procedure Management</h2>
-        
-        <div class="add-form">
-            <h3>Add New Procedure</h3>
-            <form id="add-procedure-form">
-                <input type="text" id="new-procedure" placeholder="Procedure name" required>
-                <input type="text" id="new-procedure-description" placeholder="Description (optional)">
-                <button type="submit">Add Procedure</button>
-            </form>
-        </div>
-        
-        <div class="items-list">
-            <h3>Current Procedures</h3>
-            <div id="procedures-list">
-                {% for procedure in procedures %}
-                <div class="item-entry">
-                    <div class="item-details">
-                        <span class="item-name">{{ procedure.name }}</span>
-                        {% if procedure.description %}
-                        <div class="item-description">{{ procedure.description }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="item-actions">
-                        <button class="edit-procedure-btn" data-id="{{ procedure.id }}" data-name="{{ procedure.name }}" data-description="{{ procedure.description or '' }}">Edit</button>
-                        <button class="delete-procedure-btn" data-id="{{ procedure.id }}">Delete</button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <button onclick="showDashboard()" class="back-btn">← Back to Dashboard</button>
-    </div>
-    
-    <!-- Factor Management -->
-    <div id="factors-section" class="management-section" style="display: none;">
-        <h2>⭐ Factor Management</h2>
-        
-        <div class="add-form">
-            <h3>Add New Factor</h3>
-            <form id="add-factor-form">
-                <input type="text" id="new-factor" placeholder="Factor name (e.g., Professional staff)" required>
-                <input type="text" id="new-factor-description" placeholder="Description (optional)">
-                <button type="submit">Add Factor</button>
-            </form>
-        </div>
-        
-        <div class="items-list">
-            <h3>Current Factors</h3>
-            <div id="factors-list">
-                {% for factor in factors %}
-                <div class="item-entry">
-                    <div class="item-details">
-                        <span class="item-name">{{ factor.name }}</span>
-                        {% if factor.description %}
-                        <div class="item-description">{{ factor.description }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="item-actions">
-                        <button class="edit-factor-btn" data-id="{{ factor.id }}" data-name="{{ factor.name }}" data-description="{{ factor.description or '' }}">Edit</button>
-                        <button class="delete-factor-btn" data-id="{{ factor.id }}">Delete</button>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <button onclick="showDashboard()" class="back-btn">← Back to Dashboard</button>
-    </div>
-    
-    <!-- Analytics -->
-    <div id="analytics-section" class="management-section" style="display: none;">
-        <h2>📊 Review Analytics</h2>
-        
+        <!-- Stats Overview -->
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Total Reviews</h3>
-                <div class="stat-number">{{ total_reviews }}</div>
+                <span class="stat-label">Total Reviews</span>
+                <span class="stat-number">{{ stats.total_reviews }}</span>
             </div>
             <div class="stat-card">
-                <h3>Average Rating</h3>
-                <div class="stat-number">{{ avg_rating }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Top Procedure</h3>
-                <div class="stat-text">{{ top_procedure }}</div>
+                <span class="stat-label">Average Rating</span>
+                <span class="stat-number">{{ "%.1f"|format(stats.average_rating) }} ★</span>
             </div>
         </div>
         
-        <div class="recent-reviews">
+        <!-- Navigation Cards -->
+        <div class="admin-nav-grid">
+            <div class="admin-nav-card" onclick="window.location.href='/admin/doctors'">
+                <h2>👨‍⚕️ Manage Doctors & Procedures</h2>
+                <p>Add/remove doctors and assign procedures to them</p>
+            </div>
+            
+            <div class="admin-nav-card" onclick="window.location.href='/admin/survey'">
+                <h2>📝 Change Survey</h2>
+                <p>Manage review factors and welcome messages</p>
+            </div>
+            
+            <div class="admin-nav-card" onclick="window.location.href='/admin/reviews'">
+                <h2>⭐ Patient Reviews</h2>
+                <p>View all patient reviews and feedback</p>
+            </div>
+        </div>
+        
+        <!-- Recent Reviews Preview -->
+        <div class="recent-reviews-section">
             <h3>Recent Reviews</h3>
-            {% if reviews %}
-                {% for review in reviews %}
+            <div class="reviews-list">
+                {% for review in recent_reviews[:5] %}
                 <div class="review-entry">
                     <div class="review-header">
-                        <span class="review-rating">
-                            {% for i in range(review.rating) %}★{% endfor %}
-                            {% for i in range(5 - review.rating) %}☆{% endfor %}
-                        </span>
+                        <span class="review-rating">{{ review.rating }} ★</span>
                         <span class="review-date">{{ review.created_at.strftime('%Y-%m-%d') }}</span>
                     </div>
-                    <div class="review-details">
-                        <strong>{{ review.procedure.name if review.procedure else 'Unknown Procedure' }}</strong> with {{ review.doctor.name if review.doctor else 'Unknown Doctor' }}<br>
-                        <em>Patient:</em> {{ review.patient_name }}<br>
-                        <em>Feedback:</em> {{ review.feedback or 'No additional feedback' }}
-                        {% if review.message_to_doctor %}
-                        <br><em>Message to Doctor:</em> {{ review.message_to_doctor }}
-                        {% endif %}
-                    </div>
+                    <p class="review-details">{{ review.patient_name }} - {{ review.doctor.name if review.doctor else 'Unknown' }}</p>
                 </div>
+                {% else %}
+                <p>No reviews yet.</p>
                 {% endfor %}
-            {% else %}
-                <p>No reviews yet. Reviews will appear here after patients complete the survey.</p>
-            {% endif %}
+            </div>
         </div>
-        
-        <button onclick="showDashboard()" class="back-btn">← Back to Dashboard</button>
     </div>
-    
-    <div class="back-to-main">
-        <a href="/main-selection" class="back-to-main-btn">← Back to Main Menu</a>
-    </div>
-</div>
-
-{% block scripts %}
-<script>
-function showSection(section) {
-    // Hide dashboard
-    document.querySelector('.dashboard-grid').style.display = 'none';
-    
-    // Hide all sections
-    document.querySelectorAll('.management-section').forEach(s => s.style.display = 'none');
-    
-    // Show selected section
-    document.getElementById(section + '-section').style.display = 'block';
-}
-
-function showDashboard() {
-    // Show dashboard
-    document.querySelector('.dashboard-grid').style.display = 'grid';
-    
-    // Hide all sections
-    document.querySelectorAll('.management-section').forEach(s => s.style.display = 'none');
-}
-
-// Treatment management
-document.getElementById('add-treatment-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('name', document.getElementById('new-treatment').value);
-    
-    try {
-        const response = await fetch('/api/treatments', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            location.reload();
-        } else {
-            alert('Error adding treatment');
-        }
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-});
-
-// Doctor management
-document.getElementById('add-doctor-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('name', document.getElementById('new-doctor').value);
-    
-    try {
-        const response = await fetch('/api/doctors', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            location.reload();
-        } else {
-            alert('Error adding doctor');
-        }
-    } catch (error) {
-        alert('Error: ' + error.message);
-    }
-});
-
-// Procedure management
-document.getElementById('add-procedure-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-            const formData = new FormData();
-    formData.append('name', document.getElementById('new-procedure').value);
-    formData.append('description', document.getElementById('new-procedure-description').value);
-            
-            try {
-        const response = await fetch('/api/procedures', {
-            method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-            alert('Error adding procedure');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-});
-
-// Factor management
-document.getElementById('add-factor-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData();
-    formData.append('name', document.getElementById('new-factor').value);
-    formData.append('description', document.getElementById('new-factor-description').value);
-    
-            try {
-        const response = await fetch('/api/factors', {
-            method: 'POST',
-            body: formData
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-            alert('Error adding factor');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-});
-    
-// Event delegation for all management buttons
-document.addEventListener('click', async function(e) {
-    // Doctor management
-    if (e.target.classList.contains('edit-doctor-btn')) {
-        const id = e.target.dataset.id;
-        const currentName = e.target.dataset.name;
-        const newName = prompt('Edit doctor name:', currentName);
-        
-        if (newName && newName.trim()) {
-            const formData = new FormData();
-            formData.append('name', newName.trim());
-            
-            try {
-                const response = await fetch(`/api/doctors/${id}`, {
-                    method: 'PUT',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Error updating doctor');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    }
-    
-    if (e.target.classList.contains('delete-doctor-btn')) {
-        const id = e.target.dataset.id;
-        
-        if (confirm('Are you sure you want to delete this doctor?')) {
-            try {
-                const response = await fetch(`/api/doctors/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else if (response.status === 404) {
-                    // Doctor was already deleted, just reload
-                    location.reload();
-                } else {
-                    const errorData = await response.json();
-                    alert('Error deleting doctor: ' + (errorData.detail || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    }
-    
-    // Procedure management
-    if (e.target.classList.contains('edit-procedure-btn')) {
-        const id = e.target.dataset.id;
-        const currentName = e.target.dataset.name;
-        const currentDescription = e.target.dataset.description;
-        
-        const newName = prompt('Edit procedure name:', currentName);
-        if (newName && newName.trim()) {
-            const newDescription = prompt('Edit procedure description (optional):', currentDescription);
-            
-            const formData = new FormData();
-            formData.append('name', newName.trim());
-            formData.append('description', newDescription || '');
-            
-            try {
-                const response = await fetch(`/api/procedures/${id}`, {
-                    method: 'PUT',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Error updating procedure');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    }
-    
-    if (e.target.classList.contains('delete-procedure-btn')) {
-        const id = e.target.dataset.id;
-        
-        if (confirm('Are you sure you want to delete this procedure?')) {
-            try {
-                const response = await fetch(`/api/procedures/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else if (response.status === 404) {
-                    // Procedure was already deleted, just reload
-                    location.reload();
-                } else {
-                    const errorData = await response.json();
-                    alert('Error deleting procedure: ' + (errorData.detail || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    }
-    
-    // Factor management
-    if (e.target.classList.contains('edit-factor-btn')) {
-        const id = e.target.dataset.id;
-        const currentName = e.target.dataset.name;
-        const currentDescription = e.target.dataset.description;
-        
-        const newName = prompt('Edit factor name:', currentName);
-        if (newName && newName.trim()) {
-            const newDescription = prompt('Edit factor description (optional):', currentDescription);
-            
-            const formData = new FormData();
-            formData.append('name', newName.trim());
-            formData.append('description', newDescription || '');
-            
-            try {
-                const response = await fetch(`/api/factors/${id}`, {
-                    method: 'PUT',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Error updating factor');
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    }
-    
-    if (e.target.classList.contains('delete-factor-btn')) {
-        const id = e.target.dataset.id;
-        
-        if (confirm('Are you sure you want to delete this factor?')) {
-            try {
-                const response = await fetch(`/api/factors/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else if (response.status === 404) {
-                    // Factor was already deleted, just reload
-                    location.reload();
-                } else {
-                    const errorData = await response.json();
-                    alert('Error deleting factor: ' + (errorData.detail || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    }
-});
-</script>
-{% endblock %}
-{% endblock %} 
+</body>
+</html> 

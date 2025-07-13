@@ -1,43 +1,48 @@
-{% extends "base.html" %}
-
-{% block title %}Main Menu{% endblock %}
-{% block body_class %}main-selection-page{% endblock %}
-
-{% block content %}
-<div class="main-selection-section">
-    <h1>🏥 Clinic Review System</h1>
-    <h2>What would you like to do?</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Coordinator Hub 🎀</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="blur-glow pink-blur"></div>
+        <div class="blur-glow purple-blur"></div>
+    </div>
     
-    <div class="selection-grid">
-        <div class="selection-card patient-card" onclick="window.location.href='/patient-start'">
-            <div class="card-icon">👤</div>
-            <h3>Patient Review</h3>
-            <p>Help a patient leave a review for Google</p>
-            <div class="card-features">
-                <span>✓ Personalized welcome</span>
-                <span>✓ AI-generated reviews</span>
-                <span>✓ QR code generation</span>
-            </div>
-            <a href="/patient-start" class="selection-btn">Start Patient Review</a>
+    <div class="toggle-wrapper">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="hub-container">
+        <h1 class="hub-title">Coordinator Hub 🎀</h1>
+        <p class="hub-subtitle">Please select an action below:</p>
+        
+        <div class="card-grid">
+            <form action="/patient-start" method="GET">
+                <button type="submit" class="hub-card">
+                    <h2>🌸 Patient Review</h2>
+                    <p>Guide patients through a personalized AI-powered review process.</p>
+                </button>
+            </form>
+            
+            <form action="/admin" method="GET">
+                <button type="submit" class="hub-card">
+                    <h2>🎀 Admin Dashboard</h2>
+                    <p>View insights, manage doctors & configure clinic experience.</p>
+                </button>
+            </form>
         </div>
         
-        <div class="selection-card admin-card" onclick="window.location.href='/admin'">
-            <div class="card-icon">⚙️</div>
-            <h3>Admin Dashboard</h3>
-            <p>Manage clinic data and view analytics</p>
-            <div class="card-features">
-                <span>✓ Manage doctors & procedures</span>
-                <span>✓ View review analytics</span>
-                <span>✓ Configure factors</span>
-            </div>
-            <a href="/admin" class="selection-btn">Open Admin Dashboard</a>
-        </div>
-    </div>
-    
-    <div class="logout-section">
-        <form method="post" action="/logout">
-            <button type="submit" class="logout-btn">🚪 Logout</button>
+        <form action="/logout" method="POST">
+            <button type="submit" class="logout-button">🚪 Logout</button>
         </form>
     </div>
-</div>
-{% endblock %} 
+</body>
+</html> 

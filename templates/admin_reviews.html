@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Patient Reviews 🎀</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="blur-glow pink-blur"></div>
+        <div class="blur-glow purple-blur"></div>
+    </div>
+    
+    <div class="toggle-wrapper">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1 class="admin-title">⭐ Patient Reviews</h1>
+                <p class="admin-subtitle">View all patient feedback and reviews</p>
+            </div>
+            <div class="header-actions">
+                <button onclick="window.location.href='/admin'" class="back-button">← Back to Dashboard</button>
+                <form action="/logout" method="POST" style="display: inline;">
+                    <button type="submit" class="logout-button">🚪 Logout</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Reviews Stats -->
+        <div class="reviews-stats">
+            <div class="stat-card">
+                <span class="stat-label">Total Reviews</span>
+                <span class="stat-number">{{ stats.total_reviews }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Average Rating</span>
+                <span class="stat-number">{{ "%.1f"|format(stats.average_rating) }} ★</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">This Month</span>
+                <span class="stat-number">{{ stats.this_month }}</span>
+            </div>
+        </div>
+        
+        <!-- Reviews List -->
+        <div class="reviews-section">
+            <h3>All Patient Reviews</h3>
+            <div class="reviews-list">
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="review-meta">
+                            <span class="review-rating">{{ review.rating }} ★</span>
+                            <span class="review-date">{{ review.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <div class="review-patient">
+                            <strong>{{ review.patient_name }}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="review-details">
+                        <div class="review-info">
+                            <p><strong>Doctor:</strong> {{ review.doctor.name if review.doctor else 'Unknown' }}</p>
+                            <p><strong>Procedure:</strong> {{ review.procedure.name if review.procedure else 'Unknown' }}</p>
+                        </div>
+                        
+                        {% if review.feedback %}
+                        <div class="review-feedback">
+                            <p><strong>Feedback:</strong> {{ review.feedback }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if review.additional_comments %}
+                        <div class="review-comments">
+                            <p><strong>Additional Comments:</strong> {{ review.additional_comments }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if review.message_to_doctor %}
+                        <div class="review-message">
+                            <p><strong>Message to Doctor:</strong> {{ review.message_to_doctor }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if review.selected_factors %}
+                        <div class="review-factors">
+                            <p><strong>Selected Factors:</strong></p>
+                            <div class="factors-tags">
+                                {% for factor in review.selected_factors.split(',') %}
+                                <span class="factor-tag">{{ factor.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if review.selected_review %}
+                        <div class="review-final">
+                            <p><strong>Final Review:</strong></p>
+                            <div class="final-review-text">
+                                {{ review.selected_review }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="review-actions">
+                        <form action="/delete_review/{{ review.id }}" method="POST" style="display: inline;">
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this review?')">Delete Review</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-reviews">
+                    <p>No reviews found yet. Patient reviews will appear here once they start using the system.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html> 
