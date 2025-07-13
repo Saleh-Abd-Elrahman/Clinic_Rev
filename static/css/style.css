@@ -311,6 +311,14 @@
     background: #7d2a40;
     transform: scale(1.03);
   }
+  
+  /* Logout Section */
+  .logout-section {
+    text-align: center;
+    margin-top: 1rem;
+    padding-top: 0rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
 
   /* ===== ADMIN DASHBOARD STYLES ===== */
   

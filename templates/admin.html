@@ -23,9 +23,6 @@
     <div class="admin-container">
         <div class="admin-header">
             <h1 class="admin-title">Admin Dashboard 🎀</h1>
-            <form action="/logout" method="POST" style="display: inline;">
-                <button type="submit" class="logout-button">🚪 Logout</button>
-            </form>
         </div>
         
         <!-- Stats Overview -->
@@ -58,22 +55,11 @@
             </div>
         </div>
         
-        <!-- Recent Reviews Preview -->
-        <div class="recent-reviews-section">
-            <h3>Recent Reviews</h3>
-            <div class="reviews-list">
-                {% for review in recent_reviews[:5] %}
-                <div class="review-entry">
-                    <div class="review-header">
-                        <span class="review-rating">{{ review.rating }} ★</span>
-                        <span class="review-date">{{ review.created_at.strftime('%Y-%m-%d') }}</span>
-                    </div>
-                    <p class="review-details">{{ review.patient_name }} - {{ review.doctor.name if review.doctor else 'Unknown' }}</p>
-                </div>
-                {% else %}
-                <p>No reviews yet.</p>
-                {% endfor %}
-            </div>
+        <!-- Logout Section -->
+        <div class="logout-section">
+            <form action="/logout" method="POST">
+                <button type="submit" class="logout-button">🚪 Logout</button>
+            </form>
         </div>
     </div>
 </body>
