@@ -68,6 +68,26 @@
         </div>
         
         <div class="form-group">
+            <label class="form-label">Who would you like to thank in your review?</label>
+            <div class="staff-selection-group">
+                <label class="staff-checkbox doctor-required">
+                    <input type="checkbox" name="selected_staff" value="doctor" id="doctor-checkbox" checked disabled>
+                    <span class="checkmark">Doctor</span>
+                </label>
+                <!-- Hidden input to ensure doctor is always submitted -->
+                <input type="hidden" name="selected_staff" value="doctor">
+                <label class="staff-checkbox">
+                    <input type="checkbox" name="selected_staff" value="coordinator" id="coordinator-checkbox">
+                    <span class="checkmark">Coordinator</span>
+                </label>
+                <label class="staff-checkbox">
+                    <input type="checkbox" name="selected_staff" value="nursing_team" id="nursing-checkbox">
+                    <span class="checkmark">Nursing Team</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-group">
             <label class="form-label">Additional Comments (Optional):</label>
             <div class="comments-info">
                 <p>💡 Share specific details to help generate a personalized review. Concerns can be sent privately to the doctor later.</p>
@@ -142,6 +162,36 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleCommentsBtn.textContent = '+ Add Comments';
         }
     });
+    
+    // Staff selection logic
+    const doctorCheckbox = document.getElementById('doctor-checkbox');
+    const coordinatorCheckbox = document.getElementById('coordinator-checkbox');
+    const nursingCheckbox = document.getElementById('nursing-checkbox');
+    
+    // Handle staff selection for team mention
+    function handleStaffSelection() {
+        // Doctor is always selected (disabled checkbox + hidden input)
+        const allStaffSelected = coordinatorCheckbox.checked && nursingCheckbox.checked;
+        
+        // Add hidden field to indicate if all staff are selected (for "Dr. Name and her team" logic)
+        let allStaffInput = document.getElementById('all-staff-selected');
+        if (!allStaffInput) {
+            allStaffInput = document.createElement('input');
+            allStaffInput.type = 'hidden';
+            allStaffInput.name = 'all_staff_selected';
+            allStaffInput.id = 'all-staff-selected';
+            document.getElementById('survey-form').appendChild(allStaffInput);
+        }
+        allStaffInput.value = allStaffSelected ? 'true' : 'false';
+    }
+    
+    // Add event listeners to staff checkboxes
+    [coordinatorCheckbox, nursingCheckbox].forEach(checkbox => {
+        checkbox.addEventListener('change', handleStaffSelection);
+    });
+    
+    // Initial staff selection handling
+    handleStaffSelection();
     
     // Form validation
     document.getElementById('survey-form').addEventListener('submit', function(e) {
@@ -560,6 +610,61 @@ h1 {
     line-height: 1.3;
 }
 
+.staff-selection-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.staff-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem 1.2rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.staff-checkbox:hover {
+    border-color: var(--accent1);
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.staff-checkbox input:checked + .checkmark {
+    font-weight: bold;
+    color: var(--accent1);
+}
+
+.staff-checkbox input:checked {
+    accent-color: var(--accent1);
+}
+
+.staff-checkbox input:checked ~ * {
+    color: var(--accent1);
+}
+
+.staff-checkbox.doctor-required {
+    background: rgba(184, 93, 121, 0.1);
+    border-color: var(--accent1);
+    opacity: 0.9;
+}
+
+.staff-checkbox.doctor-required input:disabled {
+    opacity: 1;
+}
+
+.staff-checkbox.doctor-required .checkmark {
+    color: var(--accent1);
+    font-weight: 500;
+}
+
 .comments-info {
     background: rgba(255, 255, 255, 0.3);
     padding: 0.8rem;
@@ -721,6 +826,18 @@ textarea::placeholder {
     .star-rating {
         padding: 0.5rem;
         min-width: 45px;
+    }
+    
+    .staff-selection-group {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+    }
+    
+    .staff-checkbox {
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
     }
 }
 </style>

@@ -56,6 +56,8 @@ class Review(Base):
     additional_comments = Column(Text, nullable=True)
     message_to_doctor = Column(Text, nullable=True)
     selected_factors = Column(Text, nullable=True)  # JSON string of selected factor IDs
+    selected_staff = Column(Text, nullable=True)  # JSON string of selected staff (doctor, coordinator, nursing_team)
+    all_staff_selected = Column(Boolean, default=False)  # True if all staff are selected (for "Dr. Name and her team" logic)
     ai_generated_reviews = Column(Text, nullable=True)  # JSON string of AI-generated reviews
     selected_review = Column(Text, nullable=True)  # Final selected review
     qr_code_data = Column(Text, nullable=True)  # QR code data/URL

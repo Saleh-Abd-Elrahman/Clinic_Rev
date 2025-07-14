@@ -44,7 +44,7 @@ def load_pdf_knowledge_base():
 PDF_KNOWLEDGE_BASE = load_pdf_knowledge_base()
 
 # Helper function to generate AI reviews
-async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, additional_comments: str = "", language: str = "English") -> list:
+async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, selected_staff: list = [], all_staff_selected: bool = False, additional_comments: str = "", language: str = "English") -> list:
     """Generate AI-powered review suggestions based on patient feedback."""
     try:
         # Build context from factors
@@ -65,13 +65,24 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         else:
             language_instruction = "Write the reviews in English."
             fallback_language = "English"
+        # Build staff thank you text
+        staff_thank_you = ""
+        if selected_staff:
+            if all_staff_selected:
+                staff_thank_you = f"Thank you to {doctor_name} and her team"
+            else:
+                selected_staff.remove("doctor")
+                if len(selected_staff) == 1:
+                    staff_thank_you = f"Thank you to {doctor_name}"
+                elif len(selected_staff) == 2:
+                    staff_thank_you = f"Thank you to {doctor_name} and {selected_staff[0]}"
         
-        # Create prompt with PDF knowledge base
+        # Create prompt with PDF knowledge base and staff thank you
         prompt = f"""
         You are an expert at writing authentic Google reviews for medical clinics. Use the following knowledge base of past reviews as a guide for style, tone, and formatting:
         
         KNOWLEDGE BASE OF PAST REVIEWS:
-        {PDF_KNOWLEDGE_BASE[:2000]}...
+        {PDF_KNOWLEDGE_BASE}...
         
         Based on the above examples and this patient feedback, generate 4 different Google review texts:
         - Patient: {patient_name}
@@ -79,6 +90,7 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         - Doctor: {doctor_name}
         - Rating: {rating}/5 stars
         - What stood out: {factors_text}
+        - Staff to thank: {staff_thank_you}
         - Additional comments: {additional_comments}
         
         LANGUAGE REQUIREMENT: {language_instruction}
@@ -87,9 +99,11 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         - Natural and authentic (1-3 sentences)
         - Positive and professional
         - Mention specific aspects from the feedback
+        - Include the staff thank you appropriately in the review
         - Written in first person
         - Different in tone and style from the others
         - Follow the style and format patterns shown in the knowledge base examples
+        - If the doctor, coordinator, or nursing team are mentioned, make sure to thank the doctor and the team and not all separately
         
         Return only the review texts, one per line, no numbering or formatting.
         """
@@ -311,6 +325,8 @@ async def review_generating_post(
     session_data: str = Form(...),
     rating: int = Form(...),
     selected_factors: List[str] = Form([]),
+    selected_staff: List[str] = Form([]),
+    all_staff_selected: str = Form("false"),
     additional_comments: str = Form(""),
     db: Session = Depends(get_db)
 ):
@@ -332,6 +348,8 @@ async def review_generating_post(
         "session_data": session_data,
         "rating": rating,
         "selected_factors": selected_factors,
+        "selected_staff": selected_staff,
+        "all_staff_selected": all_staff_selected,
         "additional_comments": additional_comments
     }
     
@@ -347,6 +365,8 @@ async def generate_reviews(
     session_data: str = Form(...),
     rating: int = Form(...),
     selected_factors: List[str] = Form([]),
+    selected_staff: List[str] = Form([]),
+    all_staff_selected: str = Form("false"),
     additional_comments: str = Form(""),
     message_to_doctor: str = Form(""),
     db: Session = Depends(get_db)
@@ -407,6 +427,8 @@ async def generate_reviews(
         doctor_name=session_info["doctor_name"],
         rating=rating,
         selected_factors=selected_factors,
+        selected_staff=selected_staff,
+        all_staff_selected=all_staff_selected.lower() == "true",
         additional_comments=additional_comments,
         language=language
     )
@@ -416,6 +438,8 @@ async def generate_reviews(
         **session_info,
         "rating": rating,
         "selected_factors": selected_factors,
+        "selected_staff": selected_staff,
+        "all_staff_selected": all_staff_selected.lower() == "true",
         "additional_comments": additional_comments,
         "message_to_doctor": message_to_doctor,
         "ai_reviews": ai_reviews
@@ -470,6 +494,8 @@ async def finalize_review(
         feedback=review_info["additional_comments"],
         message_to_doctor=review_info["message_to_doctor"],
         selected_factors=json.dumps(review_info["selected_factors"]),
+        selected_staff=json.dumps(review_info.get("selected_staff", [])),
+        all_staff_selected=review_info.get("all_staff_selected", False),
         ai_generated_reviews=json.dumps(review_info["ai_reviews"]),
         selected_review=selected_review
     )
