@@ -12,8 +12,9 @@
   <div class="glow wine"></div>
 </div>
 
-<div class="welcome-card">
+
   <h1 class="title-color">🌸 Welcome, {{ patient_name }}!</h1>
+  
   <div class="glass-box">
     <div class="emoji">💖</div>
     <p class="message">
@@ -26,8 +27,6 @@
     <input type="hidden" name="session_data" value="{{ session_data|e }}">
     <button type="submit" class="btn-primary">Start Quick Feedback</button>
   </form>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('darkToggle').addEventListener('change', function() {
