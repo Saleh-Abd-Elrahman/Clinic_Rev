@@ -25,17 +25,25 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 GOOGLE_PLACE_ID = os.getenv("GOOGLE_PLACE_ID", "")
 
 # Helper function to generate AI reviews
-async def generate_ai_reviews(patient_name: str, procedure_name: str, doctor_name: str, rating: int, selected_factors: list, additional_comments: str = "") -> list:
+async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, additional_comments: str = "") -> list:
     """Generate AI-powered review suggestions based on patient feedback."""
     try:
         # Build context from factors
         factors_text = ", ".join(selected_factors) if selected_factors else ""
         
+        # Format procedures for display
+        if len(procedure_names) == 1:
+            procedure_text = procedure_names[0]
+            procedure_mention = f"my {procedure_text} procedure"
+        else:
+            procedure_text = ", ".join(procedure_names)
+            procedure_mention = f"my {procedure_text} procedures"
+        
         # Create prompt
         prompt = f"""
         Generate 4 different Google review texts for a medical clinic based on this patient feedback:
         - Patient: {patient_name}
-        - Procedure: {procedure_name}
+        - Procedure(s): {procedure_text}
         - Doctor: {doctor_name}
         - Rating: {rating}/5 stars
         - What stood out: {factors_text}
@@ -67,10 +75,10 @@ async def generate_ai_reviews(patient_name: str, procedure_name: str, doctor_nam
         # Ensure we have exactly 4 reviews
         if len(reviews) < 4:
             reviews.extend([
-                f"Had an excellent experience with {doctor_name} for my {procedure_name} procedure. The staff was professional and the results exceeded my expectations.",
-                f"Highly recommend this clinic! The {procedure_name} treatment was comfortable and the team was very caring.",
-                f"Great experience at this clinic. {doctor_name} did an amazing job with my {procedure_name} procedure.",
-                f"Professional service and excellent results. Very happy with my {procedure_name} treatment."
+                f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
+                f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
+                f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
+                f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
             ])
         
         return reviews[:4]  # Return only first 4
@@ -79,10 +87,10 @@ async def generate_ai_reviews(patient_name: str, procedure_name: str, doctor_nam
         print(f"Error generating AI reviews: {e}")
         # Return fallback reviews
         return [
-            f"Had an excellent experience with {doctor_name} for my {procedure_name} procedure. The staff was professional and the results exceeded my expectations.",
-            f"Highly recommend this clinic! The {procedure_name} treatment was comfortable and the team was very caring.",
-            f"Great experience at this clinic. {doctor_name} did an amazing job with my {procedure_name} procedure.",
-            f"Professional service and excellent results. Very happy with my {procedure_name} treatment."
+            f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
+            f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
+            f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
+            f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
         ]
 
 router = APIRouter()
@@ -172,7 +180,7 @@ async def patient_details(
     request: Request,
     patient_name: str = Form(...),
     doctor_id: int = Form(...),
-    procedure_id: int = Form(...),
+    procedure_ids: List[int] = Form(...),
     message_to_doctor: str = Form(""),
     language: str = Form("English"),
     db: Session = Depends(get_db)
@@ -185,20 +193,37 @@ async def patient_details(
     request.session["lang"] = lang_code
     # Get doctor and procedure details
     doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
-    procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
-    if not doctor or not procedure:
-        raise HTTPException(status_code=404, detail="Doctor or procedure not found")
-    # Get welcome message
-    welcome_msg = db.query(WelcomeMessage).filter(WelcomeMessage.procedure_name == procedure.name).first()
-    welcome_text = welcome_msg.message.format(name=patient_name) if welcome_msg else f"Hi {patient_name}! Thank you for visiting our clinic."
+    procedures = db.query(Procedure).filter(Procedure.id.in_(procedure_ids)).all()
+    if not doctor or not procedures:
+        raise HTTPException(status_code=404, detail="Doctor or procedures not found")
+    
+    # Build procedure names for display
+    procedure_names = [proc.name for proc in procedures]
+    procedure_names_str = ", ".join(procedure_names)
+    
+    # Get welcome message for the first procedure (or create a general one)
+    welcome_msg = None
+    if procedures:
+        welcome_msg = db.query(WelcomeMessage).filter(WelcomeMessage.procedure_name == procedures[0].name).first()
+    
+    if welcome_msg:
+        welcome_text = welcome_msg.message.format(name=patient_name)
+    else:
+        if len(procedure_names) == 1:
+            welcome_text = f"Hi {patient_name}! Thank you for visiting our clinic for your {procedure_names[0]} procedure."
+        else:
+            welcome_text = f"Hi {patient_name}! Thank you for visiting our clinic for your {procedure_names_str} procedures."
+    
     # Store session data for the survey
     session_data = {
         "patient_name": patient_name,
         "doctor_id": doctor_id,
-        "procedure_id": procedure_id,
+        "procedure_ids": procedure_ids,
+        "procedure_id": procedure_ids[0] if procedure_ids else None,  # Keep for backward compatibility
         "message_to_doctor": message_to_doctor,
         "doctor_name": doctor.name,
-        "procedure_name": procedure.name
+        "procedure_names": procedure_names,
+        "procedure_name": procedure_names_str  # Keep for backward compatibility
     }
     return render_lang(request, "patient_welcome.html", {
         "welcome_message": welcome_text,
@@ -302,16 +327,25 @@ async def generate_reviews(
         print(f"ERROR: session_info is not a dictionary: {type(session_info)}")
         raise HTTPException(status_code=400, detail="Session data must be a JSON object")
     
-    required_fields = ["patient_name", "procedure_name", "doctor_name"]
+    required_fields = ["patient_name", "doctor_name"]
     for field in required_fields:
         if field not in session_info:
             print(f"ERROR: Missing required field '{field}' in session_info: {session_info}")
             raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
     
+    # Check for procedures (support both old and new format)
+    procedure_names = []
+    if "procedure_names" in session_info:
+        procedure_names = session_info["procedure_names"]
+    elif "procedure_name" in session_info:
+        procedure_names = [session_info["procedure_name"]]
+    else:
+        raise HTTPException(status_code=400, detail="Missing procedure information")
+    
     # Generate AI reviews
     ai_reviews = await generate_ai_reviews(
         patient_name=session_info["patient_name"],
-        procedure_name=session_info["procedure_name"],
+        procedure_names=procedure_names,
         doctor_name=session_info["doctor_name"],
         rating=rating,
         selected_factors=selected_factors,
@@ -357,10 +391,22 @@ async def finalize_review(
         raise HTTPException(status_code=400, detail=f"Error processing review data: {e}")
     
     # Save review to database
+    # Handle both old and new format for procedures
+    procedure_id = None
+    procedure_ids = None
+    
+    if "procedure_ids" in review_info:
+        procedure_ids = json.dumps(review_info["procedure_ids"])
+        procedure_id = review_info["procedure_ids"][0] if review_info["procedure_ids"] else None
+    elif "procedure_id" in review_info:
+        procedure_id = review_info["procedure_id"]
+        procedure_ids = json.dumps([procedure_id]) if procedure_id else None
+    
     review = Review(
         patient_name=review_info["patient_name"],
         doctor_id=review_info["doctor_id"],
-        procedure_id=review_info["procedure_id"],
+        procedure_id=procedure_id,
+        procedure_ids=procedure_ids,
         rating=review_info["rating"],
         feedback=review_info["additional_comments"],
         message_to_doctor=review_info["message_to_doctor"],

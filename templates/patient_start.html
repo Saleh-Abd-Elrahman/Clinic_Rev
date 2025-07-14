@@ -199,6 +199,64 @@ input[type="text"], select {
     box-sizing: border-box;
 }
 
+/* Procedure checkboxes styling */
+.procedure-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    background: var(--input-bg);
+    padding: 0.5rem;
+}
+
+.procedure-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.procedure-checkbox:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.procedure-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    width: 100%;
+}
+
+.procedure-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--accent1);
+}
+
+.procedure-checkbox .checkmark {
+    flex: 1;
+}
+
+.procedure-loading, .no-procedures, .error {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text);
+    font-style: italic;
+}
+
+.error {
+    color: #d32f2f;
+}
+
 input:focus, select:focus {
     border-color: var(--accent1);
     box-shadow: 0 0 0 3px #ffe0ef80;
@@ -426,16 +484,16 @@ button:hover {
             </select>
         {% endif %}
         
-        <label for="procedure-select">Select your procedure:</label>
+        <label for="procedure-select">Select your procedures (multiple allowed):</label>
         {% if auto_select_procedure %}
             <div class="auto-selected">
                 <span class="auto-selected-text">{{ auto_procedure.name }}</span>
-                <input type="hidden" id="procedure-select" name="procedure_id" value="{{ auto_procedure.id }}" required>
+                <input type="hidden" name="procedure_ids" value="{{ auto_procedure.id }}">
             </div>
         {% else %}
-            <select id="procedure-select" name="procedure_id" required>
-                <option value="">{% if auto_select_doctor %}Select a procedure{% else %}First select a doctor{% endif %}</option>
-            </select>
+            <div id="procedure-checkboxes" class="procedure-checkboxes">
+                <div class="procedure-loading">{% if auto_select_doctor %}Loading procedures...{% else %}First select a doctor{% endif %}</div>
+            </div>
         {% endif %}
         
         <label>Patient Status</label>
@@ -478,7 +536,7 @@ button:hover {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const doctorSelect = document.getElementById('doctor-select');
-    const procedureSelect = document.getElementById('procedure-select');
+    const procedureCheckboxes = document.getElementById('procedure-checkboxes');
     const darkToggle = document.getElementById('darkToggle');
     
     // Dark mode toggle
@@ -489,28 +547,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to load procedures for a doctor
     async function loadProcedures(doctorId) {
         if (!doctorId) {
-            procedureSelect.innerHTML = '<option value="">First select a doctor</option>';
+            procedureCheckboxes.innerHTML = '<div class="procedure-loading">First select a doctor</div>';
             return;
         }
         
         // Clear procedure options
-        procedureSelect.innerHTML = '<option value="">Loading...</option>';
+        procedureCheckboxes.innerHTML = '<div class="procedure-loading">Loading...</div>';
         
         try {
             const response = await fetch(`/api/doctors/${doctorId}/procedures`);
             const procedures = await response.json();
             
-            // Clear and populate procedure options
-            procedureSelect.innerHTML = '<option value="">Select a procedure</option>';
+            // Clear and populate procedure checkboxes
+            procedureCheckboxes.innerHTML = '';
+            if (procedures.length === 0) {
+                procedureCheckboxes.innerHTML = '<div class="no-procedures">No procedures available for this doctor</div>';
+                return;
+            }
+            
             procedures.forEach(procedure => {
-                const option = document.createElement('option');
-                option.value = procedure.id;
-                option.textContent = procedure.name;
-                procedureSelect.appendChild(option);
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'procedure-checkbox';
+                checkboxDiv.innerHTML = `
+                    <label>
+                        <input type="checkbox" name="procedure_ids" value="${procedure.id}">
+                        <span class="checkmark">${procedure.name}</span>
+                    </label>
+                `;
+                procedureCheckboxes.appendChild(checkboxDiv);
             });
         } catch (error) {
             console.error('Error fetching procedures:', error);
-            procedureSelect.innerHTML = '<option value="">Error loading procedures</option>';
+            procedureCheckboxes.innerHTML = '<div class="error">Error loading procedures</div>';
         }
     }
     
@@ -531,11 +599,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('patient-form').addEventListener('submit', function(e) {
         const patientName = document.getElementById('patient-name').value.trim();
         const doctorId = document.getElementById('doctor-select').value;
-        const procedureId = document.getElementById('procedure-select').value;
+        const selectedProcedures = document.querySelectorAll('input[name="procedure_ids"]:checked');
         
-        if (!patientName || !doctorId || !procedureId) {
+        if (!patientName || !doctorId || selectedProcedures.length === 0) {
             e.preventDefault();
-            alert('Please fill in all required fields.');
+            alert('Please fill in all required fields and select at least one procedure.');
         }
     });
 });

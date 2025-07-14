@@ -49,7 +49,8 @@ class Review(Base):
     id = Column(Integer, primary_key=True, index=True)
     patient_name = Column(String, index=True)
     doctor_id = Column(Integer, ForeignKey('doctors.id'))
-    procedure_id = Column(Integer, ForeignKey('procedures.id'))
+    procedure_id = Column(Integer, ForeignKey('procedures.id'))  # Keep for backward compatibility
+    procedure_ids = Column(Text, nullable=True)  # JSON string of multiple procedure IDs
     rating = Column(Integer)
     feedback = Column(Text, nullable=True)
     additional_comments = Column(Text, nullable=True)

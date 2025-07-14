@@ -21,6 +21,11 @@
     <h1 class="title-color">📝 Quick Feedback</h1>
     <h2 class="subtitle">How was your experience?</h2>
     
+    <div class="selected-procedures" id="selected-procedures-display" style="display: none;">
+        <h3>Selected Procedures:</h3>
+        <div id="procedure-list"></div>
+    </div>
+    
     <form method="post" action="/review-generating" id="survey-form">
         <input type="hidden" name="session_data" id="session-data-input">
         
@@ -98,6 +103,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sessionData) {
         document.getElementById('session-data-input').value = sessionData;
         console.log('Session data set in form field:', sessionData);
+        
+        // Display selected procedures
+        try {
+            const sessionInfo = JSON.parse(sessionData);
+            const procedureDisplay = document.getElementById('selected-procedures-display');
+            const procedureList = document.getElementById('procedure-list');
+            
+            if (sessionInfo.procedure_names && sessionInfo.procedure_names.length > 0) {
+                procedureDisplay.style.display = 'block';
+                procedureList.innerHTML = sessionInfo.procedure_names.map(name => 
+                    `<span class="procedure-tag">${name}</span>`
+                ).join('');
+            } else if (sessionInfo.procedure_name) {
+                // Fallback for single procedure
+                procedureDisplay.style.display = 'block';
+                procedureList.innerHTML = `<span class="procedure-tag">${sessionInfo.procedure_name}</span>`;
+            }
+        } catch (e) {
+            console.error('Error parsing session data for procedures:', e);
+        }
     } else {
         console.error('No session data found in sessionStorage');
         alert('Session data not found. Please start from the beginning.');
@@ -398,6 +423,33 @@ h1 {
     margin-bottom: 1.5rem;
     font-size: 1.1rem;
     color: var(--text);
+}
+
+.selected-procedures {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.selected-procedures h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--title);
+    font-size: 1rem;
+}
+
+.procedure-tag {
+    display: inline-block;
+    background: var(--accent1);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0.2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-group {
