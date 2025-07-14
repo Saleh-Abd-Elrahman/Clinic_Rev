@@ -15,6 +15,7 @@ import os
 import openai
 from openai import OpenAI
 from dotenv import load_dotenv
+import PyPDF2
 
 load_dotenv()
 
@@ -24,8 +25,26 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Google Place ID for reviews
 GOOGLE_PLACE_ID = os.getenv("GOOGLE_PLACE_ID", "")
 
+# Load PDF content for knowledge base
+def load_pdf_knowledge_base():
+    """Load and extract text from the PDF knowledge base."""
+    try:
+        pdf_path = "data/BH_CL.pdf"
+        with open(pdf_path, 'rb') as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        print(f"Error loading PDF knowledge base: {e}")
+        return ""
+
+# Cache the PDF content to avoid reading it multiple times
+PDF_KNOWLEDGE_BASE = load_pdf_knowledge_base()
+
 # Helper function to generate AI reviews
-async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, additional_comments: str = "") -> list:
+async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, additional_comments: str = "", language: str = "English") -> list:
     """Generate AI-powered review suggestions based on patient feedback."""
     try:
         # Build context from factors
@@ -39,9 +58,22 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
             procedure_text = ", ".join(procedure_names)
             procedure_mention = f"my {procedure_text} procedures"
         
-        # Create prompt
+        # Determine language specifications
+        if language.lower().startswith("arab"):
+            language_instruction = "Write the reviews in Arabic using the Saudi dialect. The reviews should sound natural and authentic as if written by a Saudi patient."
+            fallback_language = "Arabic (Saudi dialect)"
+        else:
+            language_instruction = "Write the reviews in English."
+            fallback_language = "English"
+        
+        # Create prompt with PDF knowledge base
         prompt = f"""
-        Generate 4 different Google review texts for a medical clinic based on this patient feedback:
+        You are an expert at writing authentic Google reviews for medical clinics. Use the following knowledge base of past reviews as a guide for style, tone, and formatting:
+        
+        KNOWLEDGE BASE OF PAST REVIEWS:
+        {PDF_KNOWLEDGE_BASE[:2000]}...
+        
+        Based on the above examples and this patient feedback, generate 4 different Google review texts:
         - Patient: {patient_name}
         - Procedure(s): {procedure_text}
         - Doctor: {doctor_name}
@@ -49,12 +81,15 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         - What stood out: {factors_text}
         - Additional comments: {additional_comments}
         
+        LANGUAGE REQUIREMENT: {language_instruction}
+        
         Each review should be:
         - Natural and authentic (1-3 sentences)
         - Positive and professional
         - Mention specific aspects from the feedback
         - Written in first person
         - Different in tone and style from the others
+        - Follow the style and format patterns shown in the knowledge base examples
         
         Return only the review texts, one per line, no numbering or formatting.
         """
@@ -62,10 +97,10 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that writes authentic, positive Google reviews for medical clinics based on patient feedback."},
+                {"role": "system", "content": f"You are a helpful assistant that writes authentic, positive Google reviews for medical clinics based on patient feedback. Always write in {fallback_language} as specified in the user's request."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300,
+            max_tokens=400,
             temperature=0.7
         )
         
@@ -74,24 +109,42 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         
         # Ensure we have exactly 4 reviews
         if len(reviews) < 4:
-            reviews.extend([
-                f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
-                f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
-                f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
-                f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
-            ])
+            if language.lower().startswith("arab"):
+                # Arabic fallback reviews (Saudi dialect)
+                reviews.extend([
+                    f"تجربة ممتازة مع الدكتور {doctor_name} في {procedure_text}. الموظفين محترفين والنتائج فاقت توقعاتي.",
+                    f"أنصح بشدة بهذه العيادة! علاج {procedure_text} كان مريح والفريق كان متعاون جداً.",
+                    f"تجربة رائعة في هذه العيادة. الدكتور {doctor_name} قام بعمل ممتاز في {procedure_text}.",
+                    f"خدمة مهنية ونتائج ممتازة. سعيد جداً بعلاج {procedure_text}."
+                ])
+            else:
+                # English fallback reviews
+                reviews.extend([
+                    f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
+                    f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
+                    f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
+                    f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
+                ])
         
         return reviews[:4]  # Return only first 4
         
     except Exception as e:
         print(f"Error generating AI reviews: {e}")
-        # Return fallback reviews
-        return [
-            f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
-            f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
-            f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
-            f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
-        ]
+        # Return fallback reviews based on language
+        if language.lower().startswith("arab"):
+            return [
+                f"تجربة ممتازة مع الدكتور {doctor_name} في {procedure_text}. الموظفين محترفين والنتائج فاقت توقعاتي.",
+                f"أنصح بشدة بهذه العيادة! علاج {procedure_text} كان مريح والفريق كان متعاون جداً.",
+                f"تجربة رائعة في هذه العيادة. الدكتور {doctor_name} قام بعمل ممتاز في {procedure_text}.",
+                f"خدمة مهنية ونتائج ممتازة. سعيد جداً بعلاج {procedure_text}."
+            ]
+        else:
+            return [
+                f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
+                f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
+                f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
+                f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
+            ]
 
 router = APIRouter()
 # templates = Jinja2Templates(directory="templates")
@@ -223,7 +276,9 @@ async def patient_details(
         "message_to_doctor": message_to_doctor,
         "doctor_name": doctor.name,
         "procedure_names": procedure_names,
-        "procedure_name": procedure_names_str  # Keep for backward compatibility
+        "procedure_name": procedure_names_str,  # Keep for backward compatibility
+        "language": language,
+        "lang_code": lang_code
     }
     return render_lang(request, "patient_welcome.html", {
         "welcome_message": welcome_text,
@@ -342,6 +397,9 @@ async def generate_reviews(
     else:
         raise HTTPException(status_code=400, detail="Missing procedure information")
     
+    # Get language from session data
+    language = session_info.get("language", "English")
+    
     # Generate AI reviews
     ai_reviews = await generate_ai_reviews(
         patient_name=session_info["patient_name"],
@@ -349,7 +407,8 @@ async def generate_reviews(
         doctor_name=session_info["doctor_name"],
         rating=rating,
         selected_factors=selected_factors,
-        additional_comments=additional_comments
+        additional_comments=additional_comments,
+        language=language
     )
     
     # Store review data
