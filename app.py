@@ -4,10 +4,14 @@ from fastapi.templating import Jinja2Templates
 from models import Treatment, Doctor, Procedure, Factor, Review, WelcomeMessage, SessionLocal, CLINIC_DATA
 from dotenv import load_dotenv
 import os
+from starlette.middleware.sessions import SessionMiddleware
 
 load_dotenv()
 
 app = FastAPI(title="Clinic Review Kiosk", version="2.0.0")
+
+# Add session middleware for language selection and other session data
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "super-secret-key"))
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")

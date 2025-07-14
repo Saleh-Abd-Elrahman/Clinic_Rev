@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Scan QR Code{% endblock %}
+{% block body_class %}qr-page{% endblock %}
+
+{% block content %}
+<div class="qr-section">
+    <h1>📱 Scan to Leave Your Review</h1>
+    <p class="instruction">Scan this QR code with your phone to copy and post your review:</p>
+    
+    <div class="qr-container">
+        <img src="{{ qr_code }}" alt="QR Code" class="qr-image">
+    </div>
+    
+    <div class="review-preview">
+        <h3>Your Review:</h3>
+        <blockquote class="selected-review">{{ selected_review }}</blockquote>
+    </div>
+    
+    <div class="qr-info">
+        <p>Or visit this link on your phone:</p>
+        <a href="{{ review_url }}" target="_blank" class="review-link">{{ review_url }}</a>
+    </div>
+    
+    <div class="reset-info">
+        <div class="countdown-container">
+            <p>This screen will automatically reset in <span id="countdown">120</span> seconds</p>
+        </div>
+        <p><em>Staff: Press 'R' to reset immediately</em></p>
+        <button id="reset-now" class="reset-btn">Reset Now</button>
+    </div>
+    
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+<script>
+let countdownSeconds = 120; // 2 minutes
+let countdownInterval;
+
+function startCountdown() {
+    countdownInterval = setInterval(function() {
+        countdownSeconds--;
+        document.getElementById('countdown').textContent = countdownSeconds;
+        
+        // Change color as time runs out
+        const countdownElement = document.getElementById('countdown');
+        if (countdownSeconds <= 30) {
+            countdownElement.style.color = '#f44336';
+            countdownElement.style.fontWeight = 'bold';
+        } else if (countdownSeconds <= 60) {
+            countdownElement.style.color = '#ff9800';
+        }
+        
+        if (countdownSeconds <= 0) {
+            resetToMainMenu();
+        }
+    }, 1000);
+}
+
+function resetToMainMenu() {
+    clearInterval(countdownInterval);
+    // Clear session storage
+    sessionStorage.clear();
+    // Redirect to main menu
+    window.location.href = '/main-selection';
+}
+
+function pauseCountdown() {
+    clearInterval(countdownInterval);
+    document.querySelector('.countdown-container p').innerHTML = 
+        'Timer paused - <button onclick="resumeCountdown()" class="resume-btn">Resume</button>';
+}
+
+function resumeCountdown() {
+    document.querySelector('.countdown-container p').innerHTML = 
+        'This screen will automatically reset in <span id="countdown">' + countdownSeconds + '</span> seconds';
+    startCountdown();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Start the countdown
+    startCountdown();
+    
+    // Reset button
+    document.getElementById('reset-now').addEventListener('click', function() {
+        if (confirm('Are you sure you want to reset to the main menu?')) {
+            resetToMainMenu();
+        }
+    });
+    
+    // Keyboard shortcut for reset
+    document.addEventListener('keydown', function(e) {
+        if (e.key.toLowerCase() === 'r' && !e.target.matches('input, textarea')) {
+            resetToMainMenu();
+        }
+        
+        // Pause countdown on any interaction
+        if (e.key === ' ' && !e.target.matches('input, textarea')) {
+            e.preventDefault();
+            pauseCountdown();
+        }
+    });
+    
+    // Pause countdown on mouse activity
+    let lastActivity = Date.now();
+    document.addEventListener('mousemove', function() {
+        lastActivity = Date.now();
+    });
+    
+    document.addEventListener('click', function() {
+        lastActivity = Date.now();
+    });
+    
+    // Check for inactivity every 5 seconds
+    setInterval(function() {
+        const inactiveTime = Date.now() - lastActivity;
+        // If inactive for more than 10 seconds, speed up countdown
+        if (inactiveTime > 10000 && countdownSeconds > 30) {
+            // Don't speed up, just continue normal countdown
+        }
+    }, 5000);
+    
+    // Add animation to QR code
+    const qrImage = document.querySelector('.qr-image');
+    qrImage.addEventListener('load', function() {
+        this.style.opacity = '0';
+        this.style.transform = 'scale(0.8)';
+        setTimeout(() => {
+            this.style.transition = 'all 0.5s ease';
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
+        }, 100);
+    });
+    
+    // Pulse animation for QR code
+    setInterval(function() {
+        qrImage.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            qrImage.style.transform = 'scale(1)';
+        }, 500);
+    }, 3000);
+});
+</script>
+
+<style>
+.qr-section {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.qr-section h1 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+}
+
+.instruction {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.qr-container {
+    display: inline-block;
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    border: 3px solid #e0e0e0;
+}
+
+.qr-image {
+    display: block;
+    max-width: 250px;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.review-preview {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #1a73e8;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.1);
+}
+
+.review-preview h3 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.selected-review {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+    font-style: italic;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.qr-info {
+    background: #f0f7ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.qr-info p {
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.review-link {
+    color: #1a73e8;
+    text-decoration: none;
+    word-break: break-all;
+    font-size: 0.9rem;
+}
+
+.review-link:hover {
+    text-decoration: underline;
+}
+
+.reset-info {
+    background: #fff3e0;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border: 2px solid #ff9800;
+}
+
+.countdown-container {
+    margin-bottom: 1rem;
+}
+
+.countdown-container p {
+    font-size: 1.1rem;
+    color: #e65100;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+#countdown {
+    font-size: 1.3rem;
+    color: #2e7d32;
+    font-weight: bold;
+    background: #e8f5e8;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.reset-info em {
+    color: #666;
+    font-size: 0.9rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.reset-btn {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.reset-btn:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.resume-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+.resume-btn:hover {
+    background: #45a049;
+}
+
+.navigation {
+    margin-top: 2rem;
+}
+
+.back-btn {
+    background: #666;
+    color: white;
+    text-decoration: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    background: #555;
+    transform: translateY(-2px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .qr-section {
+        padding: 1rem;
+    }
+    
+    .qr-section h1 {
+        font-size: 2rem;
+    }
+    
+    .qr-container {
+        padding: 1.5rem;
+    }
+    
+    .qr-image {
+        max-width: 200px;
+    }
+    
+    .instruction {
+        font-size: 1rem;
+    }
+    
+    .review-preview {
+        padding: 1rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.qr-image:hover {
+    animation: pulse 0.5s ease-in-out;
+}
+</style>
+{% endblock %} 

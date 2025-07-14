@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Message to Doctor{% endblock %}
+{% block body_class %}review-generating-page{% endblock %}
+
+{% block content %}
+<div class="message-section">
+    <div class="message-content">
+        <h1>💬 Message to Doctor (Optional)</h1>
+        <h2>Would you like to share any personal feedback with {{ doctor_name }}?</h2>
+        
+        <div class="message-info">
+            <p>This message is private and will only be visible to the doctor. It won't affect your public review.</p>
+        </div>
+        
+        <form method="post" action="/generate-reviews" id="message-form">
+            <!-- Hidden form fields from previous step -->
+            <input type="hidden" name="session_data" value="{{ form_data.session_data }}">
+            <input type="hidden" name="rating" value="{{ form_data.rating }}">
+            {% for factor in form_data.selected_factors %}
+            <input type="hidden" name="selected_factors" value="{{ factor }}">
+            {% endfor %}
+            <input type="hidden" name="additional_comments" value="{{ form_data.additional_comments }}">
+            
+            <div class="form-group">
+                <label for="message-to-doctor">Your Message (Optional):</label>
+                <textarea 
+                    id="message-to-doctor" 
+                    name="message_to_doctor" 
+                    placeholder="Share any personal feedback, concerns, or remarks for the doctor..."
+                    rows="6"
+                ></textarea>
+                <small>This could include specific concerns, improvement suggestions, or personal notes that you'd like the doctor to know about.</small>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" id="skip-btn" class="skip-btn">Skip Message</button>
+                <button type="submit" class="continue-btn">Continue to Reviews</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageForm = document.getElementById('message-form');
+    const skipBtn = document.getElementById('skip-btn');
+    const messageTextarea = document.getElementById('message-to-doctor');
+    
+    // Skip button functionality
+    skipBtn.addEventListener('click', function() {
+        messageTextarea.value = '';
+        messageForm.submit();
+    });
+    
+    // Form submission
+    messageForm.addEventListener('submit', function(e) {
+        // Show loading state
+        const continueBtn = document.querySelector('.continue-btn');
+        const originalText = continueBtn.textContent;
+        continueBtn.textContent = 'Generating Reviews...';
+        continueBtn.disabled = true;
+        
+        // The form will submit normally
+    });
+    
+    // Auto-resize textarea
+    messageTextarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+});
+</script>
+
+<style>
+.message-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+}
+
+.message-content {
+    max-width: 600px;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 300;
+}
+
+.message-content h2 {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.message-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-info p {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 120px;
+    transition: all 0.3s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    line-height: 1.4;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.skip-btn, .continue-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+}
+
+.skip-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.skip-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.continue-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: 2px solid #4CAF50;
+}
+
+.continue-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.continue-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@media (max-width: 768px) {
+    .message-content {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .message-content h1 {
+        font-size: 2rem;
+    }
+    
+    .message-content h2 {
+        font-size: 1.1rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .skip-btn, .continue-btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %} 

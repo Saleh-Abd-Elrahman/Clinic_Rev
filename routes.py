@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Form, HTTPException, Depends, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from shared import templates
+from shared import templates, render_lang
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models import get_db, Treatment, Doctor, Procedure, Factor, Review, WelcomeMessage, ADMIN_PASSWORD, CLINIC_DATA
@@ -174,23 +174,23 @@ async def patient_details(
     doctor_id: int = Form(...),
     procedure_id: int = Form(...),
     message_to_doctor: str = Form(""),
+    language: str = Form("English"),
     db: Session = Depends(get_db)
 ):
     auth_result = check_auth(request)
     if auth_result:
         return auth_result
-    
+    # Store language in session
+    lang_code = "ar" if language.lower().startswith("arab") else "en"
+    request.session["lang"] = lang_code
     # Get doctor and procedure details
     doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
     procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
-    
     if not doctor or not procedure:
         raise HTTPException(status_code=404, detail="Doctor or procedure not found")
-    
     # Get welcome message
     welcome_msg = db.query(WelcomeMessage).filter(WelcomeMessage.procedure_name == procedure.name).first()
     welcome_text = welcome_msg.message.format(name=patient_name) if welcome_msg else f"Hi {patient_name}! Thank you for visiting our clinic."
-    
     # Store session data for the survey
     session_data = {
         "patient_name": patient_name,
@@ -200,9 +200,7 @@ async def patient_details(
         "doctor_name": doctor.name,
         "procedure_name": procedure.name
     }
-    
-    return templates.TemplateResponse("patient_welcome.html", {
-        "request": request,
+    return render_lang(request, "patient_welcome.html", {
         "welcome_message": welcome_text,
         "session_data": session_data
     })
@@ -213,8 +211,7 @@ async def patient_survey(request: Request, session_data: str = "", db: Session =
     if auth_result:
         return auth_result
     factors = db.query(Factor).all()
-    return templates.TemplateResponse("patient_survey.html", {
-        "request": request,
+    return render_lang(request, "patient_survey.html", {
         "factors": factors,
         "session_data": session_data
     })
@@ -258,8 +255,7 @@ async def review_generating_post(
         "additional_comments": additional_comments
     }
     
-    return templates.TemplateResponse("review_generating.html", {
-        "request": request,
+    return render_lang(request, "review_generating.html", {
         "procedure_name": procedure_name,
         "doctor_name": doctor_name,
         "form_data": form_data
@@ -332,8 +328,7 @@ async def generate_reviews(
         "ai_reviews": ai_reviews
     }
     
-    return templates.TemplateResponse("review_selection.html", {
-        "request": request,
+    return render_lang(request, "review_selection.html", {
         "ai_reviews": ai_reviews,
         "review_data": json.dumps(review_data)
     })
@@ -384,8 +379,7 @@ async def finalize_review(
     review.qr_code_data = review_url
     db.commit()
     
-    return templates.TemplateResponse("qr_code.html", {
-        "request": request,
+    return render_lang(request, "qr_code.html", {
         "qr_code": qr_code,
         "selected_review": selected_review,
         "review_url": review_url
@@ -397,8 +391,7 @@ async def review_helper(request: Request, review_id: int, db: Session = Depends(
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
     
-    return templates.TemplateResponse("review_helper.html", {
-        "request": request,
+    return render_lang(request, "review_helper.html", {
         "review_text": review.selected_review,
         "google_place_id": GOOGLE_PLACE_ID
     })

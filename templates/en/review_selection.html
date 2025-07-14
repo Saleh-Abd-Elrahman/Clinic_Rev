@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+
+{% block title %}Choose Your Review{% endblock %}
+{% block body_class %}review-selection-page{% endblock %}
+
+{% block content %}
+<div class="review-selection-section">
+    <h1>📱 Choose Your Review</h1>
+    <h2>Select the review that best represents your experience</h2>
+    
+    <form method="post" action="/finalize-review" id="review-form">
+        <input type="hidden" name="review_data" value="{{ review_data|e }}">
+        
+        <div class="review-options">
+            {% for review in ai_reviews %}
+            <div class="review-option">
+                <label class="review-card">
+                    <input type="radio" name="selected_review" value="{{ review|e }}" {% if loop.first %}checked{% endif %}>
+                    <div class="review-content">
+                        <div class="review-text">{{ review }}</div>
+                        <div class="review-actions">
+                            <button type="button" class="edit-btn" onclick="editReview(this)">Edit</button>
+                            <button type="button" class="preview-btn" onclick="previewReview(this)">Preview</button>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="custom-review-section" style="display: none;">
+            <h3>Custom Review</h3>
+            <textarea id="custom-review" name="custom_review" placeholder="Write your own review..."></textarea>
+            <button type="button" class="use-custom-btn" onclick="useCustomReview()">Use This Review</button>
+        </div>
+        
+        <div class="actions">
+            <button type="button" class="add-custom-btn" onclick="showCustomReview()">Write Your Own</button>
+            <button type="submit" class="finalize-btn">Generate QR Code</button>
+        </div>
+    </form>
+    
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closePreview()">&times;</span>
+        <h3>Review Preview</h3>
+        <div id="preview-text"></div>
+        <div class="modal-actions">
+            <button class="close-modal-btn" onclick="closePreview()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentEditingCard = null;
+
+function editReview(button) {
+    const card = button.closest('.review-card');
+    const reviewText = card.querySelector('.review-text');
+    const currentText = reviewText.textContent;
+    
+    // Create textarea for editing
+    const textarea = document.createElement('textarea');
+    textarea.className = 'edit-textarea';
+    textarea.value = currentText;
+    textarea.style.width = '100%';
+    textarea.style.minHeight = '100px';
+    textarea.style.padding = '0.5rem';
+    textarea.style.border = '2px solid #1a73e8';
+    textarea.style.borderRadius = '4px';
+    textarea.style.fontFamily = 'inherit';
+    textarea.style.fontSize = 'inherit';
+    
+    // Replace text with textarea
+    reviewText.style.display = 'none';
+    reviewText.parentNode.insertBefore(textarea, reviewText.nextSibling);
+    
+    // Change button to save
+    button.textContent = 'Save';
+    button.onclick = function() { saveReview(button, textarea); };
+    
+    // Add cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = function() { cancelEdit(button, textarea, reviewText); };
+    button.parentNode.insertBefore(cancelBtn, button.nextSibling);
+    
+    textarea.focus();
+}
+
+function saveReview(button, textarea) {
+    const card = button.closest('.review-card');
+    const reviewText = card.querySelector('.review-text');
+    const newText = textarea.value.trim();
+    
+    if (newText) {
+        // Update the review text
+        reviewText.textContent = newText;
+        
+        // Update the radio button value
+        const radio = card.querySelector('input[type="radio"]');
+        radio.value = newText;
+        
+        // Select this review
+        radio.checked = true;
+    }
+    
+    // Restore original state
+    reviewText.style.display = 'block';
+    textarea.remove();
+    button.textContent = 'Edit';
+    button.onclick = function() { editReview(button); };
+    
+    // Remove cancel button
+    const cancelBtn = button.parentNode.querySelector('.cancel-btn');
+    if (cancelBtn) cancelBtn.remove();
+}
+
+function cancelEdit(button, textarea, reviewText) {
+    reviewText.style.display = 'block';
+    textarea.remove();
+    button.textContent = 'Edit';
+    button.onclick = function() { editReview(button); };
+    
+    // Remove cancel button
+    const cancelBtn = button.parentNode.querySelector('.cancel-btn');
+    if (cancelBtn) cancelBtn.remove();
+}
+
+function previewReview(button) {
+    const card = button.closest('.review-card');
+    const reviewText = card.querySelector('.review-text').textContent;
+    
+    document.getElementById('preview-text').textContent = reviewText;
+    document.getElementById('preview-modal').style.display = 'block';
+}
+
+function closePreview() {
+    document.getElementById('preview-modal').style.display = 'none';
+}
+
+function showCustomReview() {
+    document.querySelector('.custom-review-section').style.display = 'block';
+    document.getElementById('custom-review').focus();
+}
+
+function useCustomReview() {
+    const customText = document.getElementById('custom-review').value.trim();
+    if (customText) {
+        // Deselect all existing reviews
+        document.querySelectorAll('input[name="selected_review"]').forEach(radio => {
+            radio.checked = false;
+        });
+        
+        // Create a hidden input for the custom review
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'selected_review';
+        hiddenInput.value = customText;
+        document.getElementById('review-form').appendChild(hiddenInput);
+        
+        // Hide custom review section and show confirmation
+        document.querySelector('.custom-review-section').style.display = 'none';
+        
+        // Show confirmation
+        const confirmation = document.createElement('div');
+        confirmation.className = 'custom-confirmation';
+        confirmation.innerHTML = '<p><strong>Custom review selected:</strong> ' + customText.substring(0, 100) + '...</p>';
+        document.querySelector('.actions').insertBefore(confirmation, document.querySelector('.finalize-btn'));
+        
+        // Change button text
+        document.querySelector('.add-custom-btn').textContent = 'Edit Custom Review';
+        document.querySelector('.add-custom-btn').onclick = function() {
+            document.querySelector('.custom-review-section').style.display = 'block';
+            if (confirmation) confirmation.remove();
+        };
+    }
+}
+
+// Form validation
+document.getElementById('review-form').addEventListener('submit', function(e) {
+    const selectedReview = document.querySelector('input[name="selected_review"]:checked');
+    const customReview = document.querySelector('input[name="selected_review"][type="hidden"]');
+    
+    if (!selectedReview && !customReview) {
+        e.preventDefault();
+        alert('Please select a review or write your own.');
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('preview-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePreview();
+    }
+});
+</script>
+
+<style>
+.review-selection-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.review-options {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.review-option {
+    position: relative;
+}
+
+.review-card {
+    display: block;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.review-card:hover {
+    border-color: #1a73e8;
+    background: #f0f7ff;
+}
+
+.review-card input[type="radio"] {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    transform: scale(1.2);
+    accent-color: #1a73e8;
+}
+
+.review-card input[type="radio"]:checked + .review-content {
+    border-left: 4px solid #1a73e8;
+}
+
+.review-content {
+    padding-left: 1rem;
+}
+
+.review-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.review-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.edit-btn, .preview-btn, .cancel-btn {
+    background: transparent;
+    border: 1px solid #1a73e8;
+    color: #1a73e8;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.edit-btn:hover, .preview-btn:hover {
+    background: #1a73e8;
+    color: white;
+}
+
+.cancel-btn {
+    border-color: #666;
+    color: #666;
+}
+
+.cancel-btn:hover {
+    background: #666;
+    color: white;
+}
+
+.custom-review-section {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.custom-review-section h3 {
+    margin-bottom: 1rem;
+    color: #1a73e8;
+}
+
+.custom-review-section textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+
+.custom-review-section textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+}
+
+.use-custom-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.use-custom-btn:hover {
+    background: #45a049;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.add-custom-btn {
+    background: #666;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.add-custom-btn:hover {
+    background: #555;
+}
+
+.finalize-btn {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.finalize-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+.custom-confirmation {
+    background: #e8f5e8;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 2px solid #4caf50;
+}
+
+.custom-confirmation p {
+    margin: 0;
+    color: #2e7d32;
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-content h3 {
+    margin-bottom: 1rem;
+    color: #1a73e8;
+}
+
+.modal-content #preview-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.modal-actions {
+    text-align: center;
+}
+
+.close-modal-btn {
+    background: #666;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.close-modal-btn:hover {
+    background: #555;
+}
+
+@media (max-width: 768px) {
+    .review-selection-section {
+        padding: 1rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .finalize-btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %} 
