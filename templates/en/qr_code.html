@@ -4,30 +4,43 @@
 {% block body_class %}qr-page{% endblock %}
 
 {% block content %}
+<div class="background" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden;">
+  <div class="glow pink"></div>
+  <div class="glow wine"></div>
+</div>
+
+<div class="toggle-wrapper">
+  <label class="switch">
+    <input type="checkbox" id="themeToggle">
+    <span class="slider"></span>
+  </label>
+</div>
+
 <div class="qr-section">
-    <h1>📱 Scan to Leave Your Review</h1>
+    <h1 class="title-color">📱 Scan to Leave Your Review</h1>
     <p class="instruction">Scan this QR code with your phone to copy and post your review:</p>
     
     <div class="qr-container">
         <img src="{{ qr_code }}" alt="QR Code" class="qr-image">
+        <div class="qr-glow"></div>
     </div>
     
     <div class="review-preview">
-        <h3>Your Review:</h3>
+        <h3>✨ Your Review:</h3>
         <blockquote class="selected-review">{{ selected_review }}</blockquote>
     </div>
     
     <div class="qr-info">
-        <p>Or visit this link on your phone:</p>
+        <p>📱 Or visit this link on your phone:</p>
         <a href="{{ review_url }}" target="_blank" class="review-link">{{ review_url }}</a>
     </div>
     
     <div class="reset-info">
         <div class="countdown-container">
-            <p>This screen will automatically reset in <span id="countdown">120</span> seconds</p>
+            <p>⏰ This screen will automatically reset in <span id="countdown">120</span> seconds</p>
         </div>
-        <p><em>Staff: Press 'R' to reset immediately</em></p>
-        <button id="reset-now" class="reset-btn">Reset Now</button>
+        <p><em>👨‍💻 Staff: Press 'R' to reset immediately</em></p>
+        <button id="reset-now" class="reset-btn">🔄 Reset Now</button>
     </div>
     
     <div class="navigation">
@@ -49,8 +62,10 @@ function startCountdown() {
         if (countdownSeconds <= 30) {
             countdownElement.style.color = '#f44336';
             countdownElement.style.fontWeight = 'bold';
+            countdownElement.style.animation = 'urgentPulse 1s infinite';
         } else if (countdownSeconds <= 60) {
             countdownElement.style.color = '#ff9800';
+            countdownElement.style.animation = 'warningPulse 2s infinite';
         }
         
         if (countdownSeconds <= 0) {
@@ -70,12 +85,12 @@ function resetToMainMenu() {
 function pauseCountdown() {
     clearInterval(countdownInterval);
     document.querySelector('.countdown-container p').innerHTML = 
-        'Timer paused - <button onclick="resumeCountdown()" class="resume-btn">Resume</button>';
+        '⏸️ Timer paused - <button onclick="resumeCountdown()" class="resume-btn">▶️ Resume</button>';
 }
 
 function resumeCountdown() {
     document.querySelector('.countdown-container p').innerHTML = 
-        'This screen will automatically reset in <span id="countdown">' + countdownSeconds + '</span> seconds';
+        '⏰ This screen will automatically reset in <span id="countdown">' + countdownSeconds + '</span> seconds';
     startCountdown();
 }
 
@@ -147,155 +162,228 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 .qr-section {
     text-align: center;
-    max-width: 600px;
+    max-width: 700px;
     margin: 0 auto;
     padding: 2rem;
+    backdrop-filter: blur(16px);
+    background: var(--card-bg);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 1.2s ease;
 }
 
-.qr-section h1 {
-    color: #1a73e8;
+.title-color {
+    color: var(--title);
     margin-bottom: 1rem;
-    font-size: 2.5rem;
+    font-size: 2.8rem;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(184, 93, 121, 0.3);
 }
 
 .instruction {
-    font-size: 1.2rem;
-    color: #555;
+    font-size: 1.3rem;
+    color: var(--text);
     margin-bottom: 2rem;
     font-weight: 500;
+    opacity: 0.9;
 }
 
 .qr-container {
     display: inline-block;
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    padding: 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(184, 93, 121, 0.2);
     margin-bottom: 2rem;
-    border: 3px solid #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.qr-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: shine 3s infinite;
+}
+
+.qr-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(184, 93, 121, 0.3), transparent 70%);
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    animation: glowPulse 2s ease-in-out infinite;
+    filter: blur(20px);
 }
 
 .qr-image {
     display: block;
-    max-width: 250px;
+    max-width: 280px;
     height: auto;
     transition: transform 0.3s ease;
+    border-radius: 12px;
+    position: relative;
+    z-index: 1;
 }
 
 .review-preview {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
-    padding: 1.5rem;
-    border-radius: 12px;
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    padding: 2rem;
+    border-radius: 20px;
     margin-bottom: 2rem;
-    border-left: 4px solid #1a73e8;
-    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(184, 93, 121, 0.15);
+    border-left: 4px solid var(--accent1);
 }
 
 .review-preview h3 {
-    color: #1a73e8;
+    color: var(--title);
     margin-bottom: 1rem;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
+    font-weight: 600;
 }
 
 .selected-review {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     line-height: 1.6;
-    color: #333;
+    color: var(--text);
     font-style: italic;
     margin: 0;
-    padding: 0;
+    padding: 1rem;
     border: none;
-    background: none;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .qr-info {
-    background: #f0f7ff;
-    padding: 1rem;
-    border-radius: 8px;
+    background: var(--card-bg);
+    backdrop-filter: blur(15px);
+    padding: 1.5rem;
+    border-radius: 16px;
     margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(184, 93, 121, 0.1);
 }
 
 .qr-info p {
-    margin-bottom: 0.5rem;
-    color: #555;
+    margin-bottom: 0.8rem;
+    color: var(--text);
+    font-weight: 500;
+    font-size: 1.1rem;
 }
 
 .review-link {
-    color: #1a73e8;
+    color: var(--accent1);
     text-decoration: none;
     word-break: break-all;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    font-weight: 500;
+    background: rgba(184, 93, 121, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+    transition: all 0.3s ease;
 }
 
 .review-link:hover {
-    text-decoration: underline;
+    background: rgba(184, 93, 121, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 93, 121, 0.2);
 }
 
 .reset-info {
-    background: #fff3e0;
-    padding: 1.5rem;
-    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.1));
+    backdrop-filter: blur(15px);
+    padding: 2rem;
+    border-radius: 20px;
     margin-bottom: 2rem;
-    border: 2px solid #ff9800;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    box-shadow: 0 8px 32px rgba(255, 193, 7, 0.2);
 }
 
 .countdown-container {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .countdown-container p {
-    font-size: 1.1rem;
-    color: #e65100;
+    font-size: 1.2rem;
+    color: var(--text);
     font-weight: 600;
     margin-bottom: 0.5rem;
 }
 
 #countdown {
-    font-size: 1.3rem;
-    color: #2e7d32;
+    font-size: 1.5rem;
+    color: var(--title);
     font-weight: bold;
-    background: #e8f5e8;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
+    background: linear-gradient(145deg, rgba(184, 93, 121, 0.2), rgba(153, 46, 79, 0.2));
+    backdrop-filter: blur(10px);
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid rgba(184, 93, 121, 0.3);
+    box-shadow: 0 4px 16px rgba(184, 93, 121, 0.2);
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
 }
 
 .reset-info em {
-    color: #666;
-    font-size: 0.9rem;
+    color: var(--text);
+    font-size: 1rem;
     display: block;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
 }
 
 .reset-btn {
-    background: #f44336;
+    background: linear-gradient(145deg, #f44336, #d32f2f);
     color: white;
     border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
+    padding: 1rem 2rem;
+    border-radius: 16px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(244, 67, 54, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 .reset-btn:hover {
-    background: #d32f2f;
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(244, 67, 54, 0.4);
+    background: linear-gradient(145deg, #f44336, #c62828);
 }
 
 .resume-btn {
-    background: #4caf50;
+    background: linear-gradient(145deg, var(--accent1), var(--accent2));
     color: white;
     border: none;
-    padding: 0.4rem 0.8rem;
-    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
     margin-left: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(184, 93, 121, 0.3);
 }
 
 .resume-btn:hover {
-    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(184, 93, 121, 0.4);
 }
 
 .navigation {
@@ -303,19 +391,77 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .back-btn {
-    background: #666;
-    color: white;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text);
     text-decoration: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
+    padding: 1rem 2rem;
+    border-radius: 16px;
+    font-size: 1.1rem;
     transition: all 0.3s ease;
     display: inline-block;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .back-btn:hover {
-    background: #555;
     transform: translateY(-2px);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(25px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowPulse {
+    0%, 100% { 
+        opacity: 0.3; 
+        transform: translate(-50%, -50%) scale(1); 
+    }
+    50% { 
+        opacity: 0.6; 
+        transform: translate(-50%, -50%) scale(1.1); 
+    }
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes urgentPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3); 
+    }
+    50% { 
+        transform: scale(1.05); 
+        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6); 
+    }
+}
+
+@keyframes warningPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3); 
+    }
+    50% { 
+        transform: scale(1.02); 
+        box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5); 
+    }
+}
+
+.qr-image:hover {
+    animation: pulse 0.5s ease-in-out;
 }
 
 /* Responsive design */
@@ -324,8 +470,8 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 1rem;
     }
     
-    .qr-section h1 {
-        font-size: 2rem;
+    .title-color {
+        font-size: 2.2rem;
     }
     
     .qr-container {
@@ -333,27 +479,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     .qr-image {
-        max-width: 200px;
+        max-width: 220px;
     }
     
     .instruction {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
     
     .review-preview {
-        padding: 1rem;
+        padding: 1.5rem;
     }
-}
-
-/* Animation keyframes */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.qr-image:hover {
-    animation: pulse 0.5s ease-in-out;
+    
+    .reset-info {
+        padding: 1.5rem;
+    }
+    
+    .reset-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .back-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
 }
 </style>
 {% endblock %} 

@@ -531,10 +531,26 @@ textarea::placeholder {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Load session data from sessionStorage
-    const sessionData = sessionStorage.getItem('patientSessionData');
-    console.log('Session data from storage:', sessionData);
-    if (sessionData) {
+    // First, try to get session data from server (passed as template variable)
+    let sessionData = '{{ session_data|e }}';
+    
+    // If server didn't provide session data, try to get from sessionStorage
+    if (!sessionData || sessionData === '') {
+        sessionData = sessionStorage.getItem('patientSessionData');
+        console.log('Session data from storage:', sessionData);
+    } else {
+        console.log('Session data from server:', sessionData);
+        // Store server data in sessionStorage for consistency
+        try {
+            // Validate that it's valid JSON before storing
+            JSON.parse(sessionData);
+            sessionStorage.setItem('patientSessionData', sessionData);
+        } catch (e) {
+            console.error('Invalid session data from server:', e);
+        }
+    }
+    
+    if (sessionData && sessionData !== '') {
         document.getElementById('session-data-input').value = sessionData;
         console.log('Session data set in form field:', sessionData);
         
@@ -558,8 +574,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error parsing session data for procedures:', e);
         }
     } else {
-        console.error('No session data found in sessionStorage');
+        console.error('No session data found from server or storage');
         alert('Session data not found. Please start from the beginning.');
+        // Redirect to start page
+        window.location.href = '/patient-start';
     }
     
     // Toggle comments textarea
@@ -611,8 +629,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form validation and submission
     document.getElementById('survey-form').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent default form submission
-        
         const rating = document.querySelector('input[name="rating"]:checked');
         const factors = document.querySelectorAll('input[name="selected_factors"]:checked');
         const staff = document.querySelectorAll('input[name="selected_staff"]:checked');
@@ -623,11 +639,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!rating) {
             alert('Please select a rating.');
+            e.preventDefault();
             return;
         }
         
         if (factors.length === 0) {
             alert('Please select at least one factor that stood out.');
+            e.preventDefault();
             return;
         }
         
@@ -637,40 +655,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!sessionDataInput.value) {
             alert('Session data is missing. Please start from the beginning.');
+            window.location.href = '/patient-start';
+            e.preventDefault();
             return;
         }
         
-        console.log('Form validation passed - submitting form via AJAX');
-        
-        // Submit form via AJAX to start background review generation
-        const formData = new FormData(this);
-        formData.append('message_to_doctor', ''); // Empty message for now
+        console.log('Form validation passed - allowing normal form submission');
         
         // Change button text and disable it
         const submitBtn = document.querySelector('.generate-btn');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'Starting Generation...';
+        submitBtn.textContent = 'Continuing...';
         submitBtn.disabled = true;
         
-        fetch('/api/generate-reviews-background', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.task_id) {
-                // Redirect to review selection page with task ID
-                window.location.href = `/review-selection?task_id=${data.task_id}`;
-            } else {
-                throw new Error('No task ID received');
-            }
-        })
-        .catch(error => {
-            console.error('Error starting background generation:', error);
-            alert('Error starting review generation. Please try again.');
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        });
+        // Allow normal form submission to /review-generating
+        // Don't prevent default - let the form submit normally
     });
     
     // Add interactive star rating

@@ -671,15 +671,53 @@ textarea::placeholder {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Load session data from sessionStorage
-    const sessionData = sessionStorage.getItem('patientSessionData');
-    console.log('Session data from storage:', sessionData);
-    if (sessionData) {
+    // First, try to get session data from server (passed as template variable)
+    let sessionData = '{{ session_data|e }}';
+    
+    // If server didn't provide session data, try to get from sessionStorage
+    if (!sessionData || sessionData === '') {
+        sessionData = sessionStorage.getItem('patientSessionData');
+        console.log('Session data from storage:', sessionData);
+    } else {
+        console.log('Session data from server:', sessionData);
+        // Store server data in sessionStorage for consistency
+        try {
+            // Validate that it's valid JSON before storing
+            JSON.parse(sessionData);
+            sessionStorage.setItem('patientSessionData', sessionData);
+        } catch (e) {
+            console.error('Invalid session data from server:', e);
+        }
+    }
+    
+    if (sessionData && sessionData !== '') {
         document.getElementById('session-data-input').value = sessionData;
         console.log('Session data set in form field:', sessionData);
+        
+        // Display selected procedures
+        try {
+            const sessionInfo = JSON.parse(sessionData);
+            const procedureDisplay = document.getElementById('selected-procedures-display');
+            const procedureList = document.getElementById('procedure-list');
+            
+            if (sessionInfo.procedure_names && sessionInfo.procedure_names.length > 0) {
+                procedureDisplay.style.display = 'block';
+                procedureList.innerHTML = sessionInfo.procedure_names.map(name => 
+                    `<span class="procedure-tag">${name}</span>`
+                ).join('');
+            } else if (sessionInfo.procedure_name) {
+                // Fallback for single procedure
+                procedureDisplay.style.display = 'block';
+                procedureList.innerHTML = `<span class="procedure-tag">${sessionInfo.procedure_name}</span>`;
+            }
+        } catch (e) {
+            console.error('Error parsing session data for procedures:', e);
+        }
     } else {
-        console.error('No session data found in sessionStorage');
+        console.error('No session data found from server or storage');
         alert('بيانات الجلسة غير موجودة. يرجى البدء من جديد.');
+        // Redirect to start page
+        window.location.href = '/patient-start';
     }
     
     // Toggle comments textarea
@@ -731,18 +769,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form validation and submission
     document.getElementById('survey-form').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent default form submission
-        
         const rating = document.querySelector('input[name="rating"]:checked');
         const factors = document.querySelectorAll('input[name="selected_factors"]:checked');
         
         if (!rating) {
             alert('يرجى اختيار تقييم.');
+            e.preventDefault();
             return;
         }
         
         if (factors.length === 0) {
             alert('يرجى اختيار عامل واحد على الأقل مما لفت انتباهك.');
+            e.preventDefault();
             return;
         }
         
@@ -752,40 +790,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!sessionDataInput.value) {
             alert('بيانات الجلسة مفقودة. يرجى البدء من جديد.');
+            window.location.href = '/patient-start';
+            e.preventDefault();
             return;
         }
         
-        console.log('Form validation passed - submitting form via AJAX');
-        
-        // Submit form via AJAX to start background review generation
-        const formData = new FormData(this);
-        formData.append('message_to_doctor', ''); // Empty message for now
+        console.log('Form validation passed - allowing normal form submission');
         
         // Change button text and disable it
         const submitBtn = document.querySelector('.generate-btn');
-        const originalText = submitBtn.textContent;
-        submitBtn.textContent = 'جاري البدء...';
+        submitBtn.textContent = 'جاري المتابعة...';
         submitBtn.disabled = true;
         
-        fetch('/api/generate-reviews-background', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.task_id) {
-                // Redirect to review selection page with task ID
-                window.location.href = `/review-selection?task_id=${data.task_id}`;
-            } else {
-                throw new Error('No task ID received');
-            }
-        })
-        .catch(error => {
-            console.error('Error starting background generation:', error);
-            alert('خطأ في بدء إنشاء المراجعة. يرجى المحاولة مرة أخرى.');
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        });
+        // Allow normal form submission to /review-generating
+        // Don't prevent default - let the form submit normally
     });
     
     // Add interactive star rating

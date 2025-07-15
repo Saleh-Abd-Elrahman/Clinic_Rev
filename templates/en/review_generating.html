@@ -59,16 +59,64 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('message-form');
     const skip = document.getElementById('skip-btn');
     const textarea = document.getElementById('message-to-doctor');
+    let backgroundTaskId = null;
+
+    // Start background review generation immediately when page loads
+    startBackgroundGeneration();
+
+    function startBackgroundGeneration() {
+        const formData = new FormData(form);
+        formData.append('message_to_doctor', ''); // Empty message for background generation
+        
+        fetch('/api/generate-reviews-background', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.task_id) {
+                backgroundTaskId = data.task_id;
+                console.log('Background generation started with task ID:', backgroundTaskId);
+            } else {
+                console.error('No task ID received from background generation');
+            }
+        })
+        .catch(error => {
+            console.error('Error starting background generation:', error);
+        });
+    }
 
     skip.addEventListener('click', () => {
         textarea.value = '';
-        form.submit();
+        // Trigger form submission programmatically
+        form.dispatchEvent(new Event('submit', { bubbles: true }));
     });
 
-    form.addEventListener('submit', () => {
+    // Handle form submission - go to review selection with task_id and message
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
         const btn = document.querySelector('.continue-btn');
-        btn.textContent = 'Sending...';
+        btn.textContent = 'Continuing...';
         btn.disabled = true;
+        
+        const messageToDoctor = textarea.value;
+        
+        // Redirect to review selection with task_id and message
+        if (backgroundTaskId) {
+            const url = `/review-selection?task_id=${backgroundTaskId}&message_to_doctor=${encodeURIComponent(messageToDoctor)}`;
+            window.location.href = url;
+        } else {
+            // Fallback: if no task_id, try to submit normally
+            alert('Review generation is still starting. Please wait a moment and try again.');
+            btn.textContent = 'Send & Continue';
+            btn.disabled = false;
+        }
     });
 
     textarea.addEventListener('input', function () {

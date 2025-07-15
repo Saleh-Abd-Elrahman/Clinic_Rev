@@ -90,7 +90,7 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         You are an expert at writing authentic Google reviews for medical clinics. Use the following knowledge base of past reviews as a guide for style, tone, and formatting:
         
         KNOWLEDGE BASE OF PAST REVIEWS:
-        {PDF_KNOWLEDGE_BASE}...
+        {PDF_KNOWLEDGE_BASE[:7000]}...
         
         Based on the above examples and this patient feedback, generate 4 different Google review texts:
         - Patient: {patient_name}
@@ -355,7 +355,7 @@ async def patient_details(
     return render_lang(request, "patient_welcome.html", {
         "patient_name": patient_name,
         "welcome_message": welcome_text,
-        "session_data": session_data
+        "session_data": json.dumps(session_data)
     })
 
 @router.get("/patient-survey", response_class=HTMLResponse)
@@ -412,10 +412,15 @@ async def review_generating_post(
     
     # Parse session data to get procedure and doctor names for the transition page
     try:
+        # Decode HTML entities in session data (fallback for any HTML-encoded data)
+        import html
+        session_data = html.unescape(session_data)
+        
         session_info = json.loads(session_data)
         procedure_name = session_info.get("procedure_name", "your procedure")
         doctor_name = session_info.get("doctor_name", "your doctor")
-    except:
+    except Exception as e:
+        print(f"Error parsing session data in review_generating: {e}")
         procedure_name = "your procedure"
         doctor_name = "your doctor"
     
@@ -1110,6 +1115,42 @@ async def generate_reviews_background(
     if auth_result:
         return auth_result
     
+    # Debug: Log received session_data
+    print(f"DEBUG: Received session_data in background endpoint: {session_data}")
+    print(f"DEBUG: Type of received session_data: {type(session_data)}")
+    print(f"DEBUG: Length of received session_data: {len(session_data) if session_data else 'None'}")
+    
+    # Decode HTML entities in session data (fallback for any HTML-encoded data)
+    import html
+    session_data = html.unescape(session_data)
+    print(f"DEBUG: Session data after HTML decoding: {session_data}")
+    
+    # Validate session_data before starting background task
+    if not session_data or session_data.strip() == "":
+        return JSONResponse({
+            "error": "Session data is empty or missing",
+            "status": "error"
+        }, status_code=400)
+    
+    # Try to parse session_data to validate it's valid JSON
+    try:
+        session_info = json.loads(session_data)
+        if not isinstance(session_info, dict):
+            raise ValueError("Session data is not a valid JSON object")
+    except json.JSONDecodeError as e:
+        print(f"ERROR: Invalid JSON in session_data: {e}")
+        print(f"ERROR: Problematic session_data: '{session_data}'")
+        return JSONResponse({
+            "error": f"Invalid JSON in session data: {e}",
+            "status": "error"
+        }, status_code=400)
+    except Exception as e:
+        print(f"ERROR: Error validating session_data: {e}")
+        return JSONResponse({
+            "error": f"Error validating session data: {e}",
+            "status": "error"
+        }, status_code=400)
+    
     # Generate unique task ID
     task_id = str(uuid.uuid4())
     
@@ -1149,8 +1190,32 @@ async def process_review_generation(
         # Update progress
         background_tasks[task_id]["progress"] = 25
         
-        # Parse session data
-        session_info = json.loads(session_data)
+        # Parse session data with better error handling
+        print(f"DEBUG: Raw session_data in background task: {session_data}")
+        print(f"DEBUG: Type of session_data: {type(session_data)}")
+        print(f"DEBUG: Length of session_data: {len(session_data) if session_data else 'None'}")
+        
+        # Decode HTML entities in session data (fallback for any HTML-encoded data)
+        import html
+        session_data = html.unescape(session_data)
+        print(f"DEBUG: Session data after HTML decoding: {session_data}")
+        
+        # Check if session_data is empty or None
+        if not session_data or session_data.strip() == "":
+            raise ValueError("Session data is empty or None")
+        
+        # Try to parse session data
+        try:
+            session_info = json.loads(session_data)
+        except json.JSONDecodeError as e:
+            print(f"ERROR: JSON decode error in background task: {e}")
+            print(f"ERROR: Problematic session_data: '{session_data}'")
+            print(f"ERROR: First 100 characters: '{session_data[:100]}'")
+            raise ValueError(f"Invalid JSON in session data: {e}")
+        
+        # Validate parsed session data
+        if not isinstance(session_info, dict):
+            raise ValueError(f"Session data is not a dictionary: {type(session_info)}")
         
         # Update progress
         background_tasks[task_id]["progress"] = 50
@@ -1203,6 +1268,9 @@ async def process_review_generation(
         
     except Exception as e:
         print(f"Error in background review generation: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
         background_tasks[task_id].update({
             "status": "error",
             "error": str(e)
@@ -1234,7 +1302,7 @@ async def get_review_status(task_id: str):
     })
 
 @router.get("/review-selection", response_class=HTMLResponse)
-async def review_selection_page(request: Request, task_id: str = None):
+async def review_selection_page(request: Request, task_id: str = None, message_to_doctor: str = ""):
     """Show review selection page, optionally with task ID for background loading"""
     auth_result = check_auth(request)
     if auth_result:
@@ -1242,6 +1310,7 @@ async def review_selection_page(request: Request, task_id: str = None):
     
     return render_lang(request, "review_selection.html", {
         "task_id": task_id,
+        "message_to_doctor": message_to_doctor,
         "ai_reviews": [],  # Will be populated by JavaScript
         "review_data": "{}"  # Will be populated by JavaScript
     })
