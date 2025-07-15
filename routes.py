@@ -17,6 +17,11 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import PyPDF2
 
+# Add new import for background tasks
+import asyncio
+import uuid
+from typing import Dict, Any
+
 load_dotenv()
 
 # OpenAI configuration
@@ -42,6 +47,9 @@ def load_pdf_knowledge_base():
 
 # Cache the PDF content to avoid reading it multiple times
 PDF_KNOWLEDGE_BASE = load_pdf_knowledge_base()
+
+# Add a simple in-memory storage for background tasks (in production, use Redis or database)
+background_tasks: Dict[str, Dict[str, Any]] = {}
 
 # Helper function to generate AI reviews
 async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, selected_staff: list = [], all_staff_selected: bool = False, additional_comments: str = "", language: str = "English") -> list:
@@ -213,6 +221,44 @@ async def logout():
     response.delete_cookie("authenticated", httponly=True)
     return response
 
+# ============== LANGUAGE SWITCHING ==============
+
+@router.post("/change-language")
+async def change_language(
+    request: Request, 
+    language: str = Form(...),
+    patient_name: str = Form(""),
+    doctor_id: str = Form(""),
+    procedure_ids: List[str] = Form(default=[]),
+    status: str = Form(""),
+    mood: str = Form("")
+):
+    # Set the language in the session
+    lang_code = "ar" if language.lower().startswith("arab") else "en"
+    request.session["lang"] = lang_code
+    
+    # Store form state in session to preserve it after language change
+    # Convert procedure_ids to integers for consistency
+    procedure_ids_int = []
+    for pid in procedure_ids:
+        try:
+            procedure_ids_int.append(int(pid))
+        except (ValueError, TypeError):
+            continue
+    
+    form_state = {
+        "patient_name": patient_name,
+        "doctor_id": int(doctor_id) if doctor_id else None,
+        "procedure_ids": procedure_ids_int,
+        "status": status,
+        "mood": mood
+    }
+    request.session["form_state"] = form_state
+    
+    # Return current page URL to redirect back to
+    referer = request.headers.get("referer", "/patient-start")
+    return RedirectResponse(url=referer, status_code=302)
+
 # ============== PATIENT FLOW ROUTES ==============
 
 @router.get("/patient-start", response_class=HTMLResponse)
@@ -220,6 +266,11 @@ async def patient_start(request: Request, db: Session = Depends(get_db)):
     auth_result = check_auth(request)
     if auth_result:
         return auth_result
+    
+    # Ensure the session language is set to English by default if not already set
+    if "lang" not in request.session:
+        request.session["lang"] = "en"
+    
     doctors = db.query(Doctor).all()
     
     # Check if there's only one doctor
@@ -233,13 +284,20 @@ async def patient_start(request: Request, db: Session = Depends(get_db)):
         auto_select_procedure = True
         auto_procedure = auto_doctor.procedures[0]
     
-    return templates.TemplateResponse("patient_start.html", {
-        "request": request,
+    # Check for saved form state from language change
+    form_state = request.session.get("form_state", {})
+    
+    # Clear form state from session after retrieving it
+    if "form_state" in request.session:
+        del request.session["form_state"]
+    
+    return render_lang(request, "patient_start.html", {
         "doctors": doctors,
         "auto_select_doctor": auto_select_doctor,
         "auto_doctor": auto_doctor,
         "auto_select_procedure": auto_select_procedure,
-        "auto_procedure": auto_procedure
+        "auto_procedure": auto_procedure,
+        "form_state": form_state
     })
 
 @router.post("/patient-details")
@@ -265,21 +323,21 @@ async def patient_details(
         raise HTTPException(status_code=404, detail="Doctor or procedures not found")
     
     # Build procedure names for display
-    procedure_names = [proc.name for proc in procedures]
+    procedure_names = [proc.get_name(lang_code) for proc in procedures]
     procedure_names_str = ", ".join(procedure_names)
     
     # Generate a kind, general welcome message that handles multiple procedures
-    if len(procedure_names) == 1:
-        welcome_text = f"Thank you for choosing our clinic for your treatment. We're delighted to have you with us today and hope you had a comfortable experience."
-    else:
-        # For multiple procedures, create a more elegant message
-        if len(procedure_names) == 2:
-            procedures_text = f"{procedure_names[0]} and {procedure_names[1]}"
+    if lang_code == "en":
+        if len(procedure_names) == 1:
+            welcome_text = f"You shine bright like a diamond ✨ <br> We're delighted to have you with us today. Thank you for tursting us with your treatment and we wish you a statisfying result."
         else:
-            # For 3+ procedures: "A, B, and C"
-            procedures_text = ", ".join(procedure_names[:-1]) + f", and {procedure_names[-1]}"
-        
-        welcome_text = f"Thank you for choosing our clinic for your {procedures_text} treatments. We're delighted to have you with us today and hope you had a comfortable experience with all your procedures."
+            welcome_text = f"You shine bright like a diamond ✨ <br> We're delighted to have you with us today. Thank you for tursting us with your treatments and we wish you statisfying results."
+    elif lang_code == "ar":
+        if len(procedure_names) == 1:
+            welcome_text = f" إطلالتك اليوم فاخرة ✨<br> سعدا جدًا إنا كنا إختيارك لتجربتك، و شكرا لثقتك في دكتوره ساره ونتمنى لكِ نتائج ترضيكِ تمامًا."
+        else:
+            welcome_text = f" إطلالتك اليوم فاخرة ✨<br> سعدا جدًا إنا كنا إختيارك لتجربتك، و شكرا لثقتك في دكتوره ساره ونتمنى لكِ نتائج ترضيكِ تمامًا."
+
     
     # Store session data for the survey
     session_data = {
@@ -288,7 +346,7 @@ async def patient_details(
         "procedure_ids": procedure_ids,
         "procedure_id": procedure_ids[0] if procedure_ids else None,  # Keep for backward compatibility
         "message_to_doctor": message_to_doctor,
-        "doctor_name": doctor.name,
+        "doctor_name": doctor.get_name(lang_code),
         "procedure_names": procedure_names,
         "procedure_name": procedure_names_str,  # Keep for backward compatibility
         "language": language,
@@ -305,11 +363,28 @@ async def patient_survey(request: Request, session_data: str = "", db: Session =
     auth_result = check_auth(request)
     if auth_result:
         return auth_result
+    
+    # Get language from session
+    lang_code = request.session.get("lang", "en")
+        
+    # Get all factors - no need to filter by language since they're bilingual now
     factors = db.query(Factor).all()
-    return render_lang(request, "patient_survey.html", {
-        "factors": factors,
+    
+    # Transform factors to include the appropriate language name
+    factors_with_lang = []
+    for factor in factors:
+        factors_with_lang.append({
+            "id": factor.id,
+            "name": factor.get_name(lang_code),
+            "description": factor.description
+        })
+    
+    template_data = {
+        "factors": factors_with_lang,
         "session_data": session_data
-    })
+    }
+    
+    return render_lang(request, "patient_survey.html", template_data)
 
 @router.get("/review-generating", response_class=HTMLResponse)
 async def review_generating(request: Request, db: Session = Depends(get_db)):
@@ -547,9 +622,9 @@ async def admin_dashboard(request: Request, db: Session = Depends(get_db)):
     avg_rating = db.query(func.avg(Review.rating)).scalar() or 0
     
     # Get top procedure
-    top_procedure = db.query(Procedure.name, func.count(Review.id).label('count'))\
+    top_procedure = db.query(Procedure.name_en, func.count(Review.id).label('count'))\
         .join(Review, Procedure.id == Review.procedure_id)\
-        .group_by(Procedure.name)\
+        .group_by(Procedure.name_en)\
         .order_by(func.count(Review.id).desc())\
         .first()
     
@@ -579,15 +654,23 @@ async def admin_dashboard(request: Request, db: Session = Depends(get_db)):
 @router.get("/api/doctors")
 async def get_doctors(db: Session = Depends(get_db)):
     doctors = db.query(Doctor).all()
-    return [{"id": d.id, "name": d.name, "procedures": [{"id": p.id, "name": p.name} for p in d.procedures]} for d in doctors]
+    return [{"id": d.id, "name": d.get_name("en"), "procedures": [{"id": p.id, "name": p.get_name("en")} for p in d.procedures]} for d in doctors]
 
 @router.get("/api/doctors/{doctor_id}/procedures")
-async def get_doctor_procedures(doctor_id: int, db: Session = Depends(get_db)):
+async def get_doctor_procedures(doctor_id: int, language: str = "en", db: Session = Depends(get_db)):
     doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
     
-    return [{"id": p.id, "name": p.name} for p in doctor.procedures]
+    # Get procedures associated with this doctor and return them in the requested language
+    procedures = []
+    for procedure in doctor.procedures:
+        procedures.append({
+            "id": procedure.id,
+            "name": procedure.get_name(language)
+        })
+    
+    return procedures
 
 @router.post("/api/doctors")
 async def add_doctor(name: str = Form(...), db: Session = Depends(get_db)):
@@ -597,12 +680,13 @@ async def add_doctor(name: str = Form(...), db: Session = Depends(get_db)):
     return {"message": "Doctor added successfully", "id": doctor.id}
 
 @router.put("/api/doctors/{doctor_id}")
-async def update_doctor(doctor_id: int, name: str = Form(...), db: Session = Depends(get_db)):
+async def update_doctor(doctor_id: int, name_en: str = Form(...), name_ar: str = Form(""), db: Session = Depends(get_db)):
     doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
     if not doctor:
         raise HTTPException(status_code=404, detail="Doctor not found")
     
-    doctor.name = name
+    doctor.name_en = name_en
+    doctor.name_ar = name_ar
     db.commit()
     return {"message": "Doctor updated successfully"}
 
@@ -620,22 +704,23 @@ async def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
 @router.get("/api/procedures")
 async def get_procedures(db: Session = Depends(get_db)):
     procedures = db.query(Procedure).all()
-    return [{"id": p.id, "name": p.name, "description": p.description} for p in procedures]
+    return [{"id": p.id, "name_en": p.name_en, "name_ar": p.name_ar, "description": p.description} for p in procedures]
 
 @router.post("/api/procedures")
-async def add_procedure(name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
-    procedure = Procedure(name=name, description=description)
+async def add_procedure(name_en: str = Form(...), name_ar: str = Form(""), description: str = Form(""), db: Session = Depends(get_db)):
+    procedure = Procedure(name_en=name_en, name_ar=name_ar, description=description)
     db.add(procedure)
     db.commit()
     return {"message": "Procedure added successfully", "id": procedure.id}
 
 @router.put("/api/procedures/{procedure_id}")
-async def update_procedure(procedure_id: int, name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
+async def update_procedure(procedure_id: int, name_en: str = Form(...), name_ar: str = Form(""), description: str = Form(""), db: Session = Depends(get_db)):
     procedure = db.query(Procedure).filter(Procedure.id == procedure_id).first()
     if not procedure:
         raise HTTPException(status_code=404, detail="Procedure not found")
     
-    procedure.name = name
+    procedure.name_en = name_en
+    procedure.name_ar = name_ar
     procedure.description = description
     db.commit()
     return {"message": "Procedure updated successfully"}
@@ -654,22 +739,23 @@ async def delete_procedure(procedure_id: int, db: Session = Depends(get_db)):
 @router.get("/api/factors")
 async def get_factors(db: Session = Depends(get_db)):
     factors = db.query(Factor).all()
-    return [{"id": f.id, "name": f.name, "description": f.description} for f in factors]
+    return [{"id": f.id, "name_en": f.name_en, "name_ar": f.name_ar, "description": f.description} for f in factors]
 
 @router.post("/api/factors")
-async def add_factor(name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
-    factor = Factor(name=name, description=description)
+async def add_factor(name_en: str = Form(...), name_ar: str = Form(""), description: str = Form(""), db: Session = Depends(get_db)):
+    factor = Factor(name_en=name_en, name_ar=name_ar, description=description)
     db.add(factor)
     db.commit()
     return {"message": "Factor added successfully", "id": factor.id}
 
 @router.put("/api/factors/{factor_id}")
-async def update_factor(factor_id: int, name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
+async def update_factor(factor_id: int, name_en: str = Form(...), name_ar: str = Form(""), description: str = Form(""), db: Session = Depends(get_db)):
     factor = db.query(Factor).filter(Factor.id == factor_id).first()
     if not factor:
         raise HTTPException(status_code=404, detail="Factor not found")
     
-    factor.name = name
+    factor.name_en = name_en
+    factor.name_ar = name_ar
     factor.description = description
     db.commit()
     return {"message": "Factor updated successfully"}
@@ -729,8 +815,8 @@ async def get_analytics(db: Session = Depends(get_db)):
             {
                 "id": r.id,
                 "patient_name": r.patient_name,
-                "doctor_name": r.doctor.name if r.doctor else "Unknown",
-                "procedure_name": r.procedure.name if r.procedure else "Unknown",
+                "doctor_name": r.doctor.get_name("en") if r.doctor else "Unknown",
+                "procedure_name": r.procedure.get_name("en") if r.procedure else "Unknown",
                 "rating": r.rating,
                 "feedback": r.feedback,
                 "created_at": r.created_at.isoformat()
@@ -791,8 +877,8 @@ async def delete_treatment_form(treatment_id: int, db: Session = Depends(get_db)
     return RedirectResponse(url="/admin", status_code=302)
 
 @router.post("/add_doctor")
-async def add_doctor_form(name: str = Form(...), db: Session = Depends(get_db)):
-    doctor = Doctor(name=name)
+async def add_doctor_form(name_en: str = Form(...), name_ar: str = Form(""), db: Session = Depends(get_db)):
+    doctor = Doctor(name_en=name_en, name_ar=name_ar)
     db.add(doctor)
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
@@ -805,9 +891,11 @@ async def delete_doctor_form(doctor_id: int, db: Session = Depends(get_db)):
         db.commit()
     return RedirectResponse(url="/admin", status_code=302)
 
+
+
 @router.post("/add_procedure")
-async def add_procedure_form(name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
-    procedure = Procedure(name=name, description=description)
+async def add_procedure_form(name_en: str = Form(...), name_ar: str = Form(""), description: str = Form(""), db: Session = Depends(get_db)):
+    procedure = Procedure(name_en=name_en, name_ar=name_ar, description=description)
     db.add(procedure)
     db.commit()
     return RedirectResponse(url="/admin", status_code=302)
@@ -819,6 +907,8 @@ async def delete_procedure_form(procedure_id: int, db: Session = Depends(get_db)
         db.delete(procedure)
         db.commit()
     return RedirectResponse(url="/admin", status_code=302)
+
+
 
 @router.post("/add_factor")
 async def add_factor_form(name: str = Form(...), db: Session = Depends(get_db)):
@@ -925,8 +1015,8 @@ async def delete_review_form(review_id: int, db: Session = Depends(get_db)):
 
 # Update existing form routes to redirect to correct pages
 @router.post("/add_doctor")
-async def add_doctor_form(name: str = Form(...), db: Session = Depends(get_db)):
-    doctor = Doctor(name=name)
+async def add_doctor_form(name_en: str = Form(...), name_ar: str = Form(""), db: Session = Depends(get_db)):
+    doctor = Doctor(name_en=name_en, name_ar=name_ar)
     db.add(doctor)
     db.commit()
     return RedirectResponse(url="/admin/doctors", status_code=302)
@@ -939,9 +1029,17 @@ async def delete_doctor_form(doctor_id: int, db: Session = Depends(get_db)):
         db.commit()
     return RedirectResponse(url="/admin/doctors", status_code=302)
 
+@router.post("/delete_doctor_selected")
+async def delete_doctor_selected(doctor_id: int = Form(...), db: Session = Depends(get_db)):
+    doctor = db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    if doctor:
+        db.delete(doctor)
+        db.commit()
+    return RedirectResponse(url="/admin/doctors", status_code=302)
+
 @router.post("/add_procedure")
-async def add_procedure_form(name: str = Form(...), description: str = Form(""), db: Session = Depends(get_db)):
-    procedure = Procedure(name=name, description=description)
+async def add_procedure_form(name_en: str = Form(...), name_ar: str = Form(""), description: str = Form(""), db: Session = Depends(get_db)):
+    procedure = Procedure(name_en=name_en, name_ar=name_ar, description=description)
     db.add(procedure)
     db.commit()
     return RedirectResponse(url="/admin/doctors", status_code=302)
@@ -953,6 +1051,8 @@ async def delete_procedure_form(procedure_id: int, db: Session = Depends(get_db)
         db.delete(procedure)
         db.commit()
     return RedirectResponse(url="/admin/doctors", status_code=302)
+
+
 
 @router.post("/add_factor")
 async def add_factor_form(name: str = Form(...), db: Session = Depends(get_db)):
@@ -991,3 +1091,157 @@ async def remove_doctor_procedure_form(doctor_id: int, procedure_id: int, db: Se
         db.commit()
     
     return RedirectResponse(url="/admin/doctors", status_code=302)
+
+# Add new API endpoint for background review generation
+@router.post("/api/generate-reviews-background")
+async def generate_reviews_background(
+    request: Request,
+    session_data: str = Form(...),
+    rating: int = Form(...),
+    selected_factors: List[str] = Form([]),
+    selected_staff: List[str] = Form([]),
+    all_staff_selected: str = Form("false"),
+    additional_comments: str = Form(""),
+    message_to_doctor: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    """Start background review generation and return task ID"""
+    auth_result = check_auth(request)
+    if auth_result:
+        return auth_result
+    
+    # Generate unique task ID
+    task_id = str(uuid.uuid4())
+    
+    # Store initial task status
+    background_tasks[task_id] = {
+        "status": "processing",
+        "progress": 0,
+        "reviews": None,
+        "error": None
+    }
+    
+    # Start background task
+    asyncio.create_task(process_review_generation(
+        task_id, session_data, rating, selected_factors, selected_staff, 
+        all_staff_selected, additional_comments, message_to_doctor, db
+    ))
+    
+    return JSONResponse({
+        "task_id": task_id,
+        "status": "started",
+        "message": "Review generation started"
+    })
+
+async def process_review_generation(
+    task_id: str,
+    session_data: str,
+    rating: int,
+    selected_factors: List[str],
+    selected_staff: List[str],
+    all_staff_selected: str,
+    additional_comments: str,
+    message_to_doctor: str,
+    db: Session
+):
+    """Process review generation in background"""
+    try:
+        # Update progress
+        background_tasks[task_id]["progress"] = 25
+        
+        # Parse session data
+        session_info = json.loads(session_data)
+        
+        # Update progress
+        background_tasks[task_id]["progress"] = 50
+        
+        # Check for procedures (support both old and new format)
+        procedure_names = []
+        if "procedure_names" in session_info:
+            procedure_names = session_info["procedure_names"]
+        elif "procedure_name" in session_info:
+            procedure_names = [session_info["procedure_name"]]
+        
+        # Get language from session data
+        language = session_info.get("language", "English")
+        
+        # Update progress
+        background_tasks[task_id]["progress"] = 75
+        
+        # Generate AI reviews
+        ai_reviews = await generate_ai_reviews(
+            patient_name=session_info["patient_name"],
+            procedure_names=procedure_names,
+            doctor_name=session_info["doctor_name"],
+            rating=rating,
+            selected_factors=selected_factors,
+            selected_staff=selected_staff,
+            all_staff_selected=all_staff_selected.lower() == "true",
+            additional_comments=additional_comments,
+            language=language
+        )
+        
+        # Store review data
+        review_data = {
+            **session_info,
+            "rating": rating,
+            "selected_factors": selected_factors,
+            "selected_staff": selected_staff,
+            "all_staff_selected": all_staff_selected.lower() == "true",
+            "additional_comments": additional_comments,
+            "message_to_doctor": message_to_doctor,
+            "ai_reviews": ai_reviews
+        }
+        
+        # Update task with results
+        background_tasks[task_id].update({
+            "status": "completed",
+            "progress": 100,
+            "reviews": ai_reviews,
+            "review_data": review_data
+        })
+        
+    except Exception as e:
+        print(f"Error in background review generation: {e}")
+        background_tasks[task_id].update({
+            "status": "error",
+            "error": str(e)
+        })
+
+@router.get("/api/review-status/{task_id}")
+async def get_review_status(task_id: str):
+    """Check status of background review generation"""
+    if task_id not in background_tasks:
+        return JSONResponse({"error": "Task not found"}, status_code=404)
+    
+    task_data = background_tasks[task_id]
+    
+    if task_data["status"] == "completed":
+        # Clean up task after successful completion
+        result = {
+            "status": "completed",
+            "reviews": task_data["reviews"],
+            "review_data": task_data["review_data"]
+        }
+        # Remove task from memory after returning result
+        del background_tasks[task_id]
+        return JSONResponse(result)
+    
+    return JSONResponse({
+        "status": task_data["status"],
+        "progress": task_data.get("progress", 0),
+        "error": task_data.get("error")
+    })
+
+@router.get("/review-selection", response_class=HTMLResponse)
+async def review_selection_page(request: Request, task_id: str = None):
+    """Show review selection page, optionally with task ID for background loading"""
+    auth_result = check_auth(request)
+    if auth_result:
+        return auth_result
+    
+    return render_lang(request, "review_selection.html", {
+        "task_id": task_id,
+        "ai_reviews": [],  # Will be populated by JavaScript
+        "review_data": "{}"  # Will be populated by JavaScript
+    })

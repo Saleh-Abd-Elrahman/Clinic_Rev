@@ -80,7 +80,7 @@
                     <select name="procedure_name" required>
                         <option value="">Select procedure...</option>
                         {% for procedure in procedures %}
-                        <option value="{{ procedure.name }}">{{ procedure.name }}</option>
+                        <option value="{{ procedure.name_en }}">{{ procedure.name_en }}</option>
                         {% endfor %}
                     </select>
                     <textarea name="message" placeholder="Welcome message (use {name} for patient name)" required></textarea>

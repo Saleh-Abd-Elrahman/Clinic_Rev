@@ -8,7 +8,7 @@
 
 <div class="toggle-wrapper">
   <label class="switch">
-    <input type="checkbox" id="darkToggle">
+    <input type="checkbox" id="themeToggle">
     <span class="slider"></span>
   </label>
 </div>
@@ -76,22 +76,18 @@
   <div class="glass-box">
     <div class="emoji">💖</div>
     <p class="message">
-      {{ welcome_message }}
+      {{ welcome_message|safe }}
     </p>
   </div>
-  <p class="subtext">Thank you for your precious time</p>
+  <p class="subtext">A moment of your precious time for a quick review?</p>
 
   <form method="get" action="/patient-survey" id="continue-form">
     <input type="hidden" name="session_data" value="{{ session_data|e }}">
-    <button type="submit" class="btn-primary">Start Quick Feedback</button>
+    <button type="submit" class="btn-primary">Start Quick Review</button>
   </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('darkToggle').addEventListener('change', function() {
-    document.body.classList.toggle('dark');
-  });
-
   // Store session - fix JavaScript linter issues
   try {
     const sessionDataElement = document.querySelector('input[name="session_data"]');
@@ -103,13 +99,6 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (error) {
     console.log('Error parsing session data:', error);
   }
-
-  let timeout = setTimeout(() => {
-    document.getElementById('continue-form').submit();
-  }, 5000);
-
-  document.addEventListener('click', () => clearTimeout(timeout));
-  document.addEventListener('keydown', () => clearTimeout(timeout));
 });
 </script>
 {% endblock %}

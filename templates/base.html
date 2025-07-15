@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{% block lang %}en{% endblock %}" dir="{% block dir %}ltr{% endblock %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,6 +10,16 @@
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/css/style.css?v=7">
     {% block extra_css %}{% endblock %}
+    
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <div class="container">

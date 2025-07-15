@@ -28,7 +28,7 @@
             <select id="doctor" name="doctor" required>
                 <option value="">Select practitioner</option>
                 {% for doctor in doctors %}
-                <option value="{{ doctor.name }}">{{ doctor.name }}</option>
+                <option value="{{ doctor.name_en }}">{{ doctor.name_en }}</option>
                 {% endfor %}
             </select>
         </div>

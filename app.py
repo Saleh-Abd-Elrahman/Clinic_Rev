@@ -26,8 +26,11 @@ def init_db():
         # Add default procedures if they don't exist
         existing_procedures = db.query(Procedure).count()
         if existing_procedures == 0:
-            for procedure_name in CLINIC_DATA["procedures"]:
-                procedure = Procedure(name=procedure_name)
+            for procedure_data in CLINIC_DATA["procedures"]:
+                procedure = Procedure(
+                    name_en=procedure_data["name_en"],
+                    name_ar=procedure_data["name_ar"]
+                )
                 db.add(procedure)
             db.commit()
         
@@ -35,15 +38,21 @@ def init_db():
         existing_doctors = db.query(Doctor).count()
         if existing_doctors == 0:
             for doctor_data in CLINIC_DATA["doctors"]:
-                doctor = Doctor(name=doctor_data["name"])
+                doctor = Doctor(
+                    name_en=doctor_data["name_en"],
+                    name_ar=doctor_data["name_ar"]
+                )
                 db.add(doctor)
             db.commit()
         
         # Add default factors if they don't exist
         existing_factors = db.query(Factor).count()
         if existing_factors == 0:
-            for factor_name in CLINIC_DATA["factors"]:
-                factor = Factor(name=factor_name)
+            for factor_data in CLINIC_DATA["factors"]:
+                factor = Factor(
+                    name_en=factor_data["name_en"],
+                    name_ar=factor_data["name_ar"]
+                )
                 db.add(factor)
             db.commit()
         
@@ -61,18 +70,18 @@ def init_db():
         
         for doctor in doctors:
             if len(doctor.procedures) == 0:  # Only if not already set
-                doctor_data = next((d for d in CLINIC_DATA["doctors"] if d["name"] == doctor.name), None)
+                doctor_data = next((d for d in CLINIC_DATA["doctors"] if d["name_en"] == doctor.name_en), None)
                 if doctor_data:
                     for procedure_name in doctor_data["procedures"]:
-                        procedure = next((p for p in procedures if p.name == procedure_name), None)
+                        procedure = next((p for p in procedures if p.name_en == procedure_name), None)
                         if procedure:
                             doctor.procedures.append(procedure)
         
         # Keep legacy treatments for backwards compatibility
         existing_treatments = db.query(Treatment).count()
         if existing_treatments == 0:
-            for procedure_name in CLINIC_DATA["procedures"]:
-                treatment = Treatment(name=procedure_name)
+            for procedure_data in CLINIC_DATA["procedures"]:
+                treatment = Treatment(name=procedure_data["name_en"])
                 db.add(treatment)
         
         db.commit()
@@ -83,11 +92,13 @@ def init_db():
         db.close()
 
 # Initialize database on startup
-init_db()
+@app.on_event("startup")
+async def startup_event():
+    init_db()
 
-# Include routes
-from routes import router
-app.include_router(router)
+# Import routes
+from routes import router as routes_router
+app.include_router(routes_router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,17 +1,17 @@
-{% extends "base.html" %}
+{% extends "ar/base.html" %}
+
 {% block content %}
+<div class="background" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden;">
+  <div class="glow pink"></div>
+  <div class="glow wine"></div>
+</div>
 
 <div class="toggle-wrapper">
-    <label class="switch">
-      <input type="checkbox" id="darkToggle">
-      <span class="slider"></span>
-    </label>
-  </div>
-  
-  <div class="background" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden;">
-    <div class="glow pink"></div>
-    <div class="glow wine"></div>
-  </div>
+  <label class="switch">
+    <input type="checkbox" id="themeToggle">
+    <span class="slider"></span>
+  </label>
+</div>
 
 <style>
 .btn-primary {
@@ -70,26 +70,24 @@
     0 0 0 3px rgba(184, 93, 121, 0.2);
 }
 </style>
+
+<h1 class="title-color">أهلًا وسهلًا، {{ patient_name }}! 🌸</h1>
   
-  <div class="welcome-card">
-    <h1 class="title-color">🌸 Welcome, {{ patient_name }}!</h1>
-    <div class="glass-box">
-      <div class="emoji">💖</div>
-      <p class="message">{{ welcome_message }}</p>
-    </div>
-    <p class="subtext">We'd love your feedback to keep improving.</p>
-    <form method="get" action="/patient-survey" id="continue-form">
-      <input type="hidden" name="session_data" value="{{ session_data|e }}">
-      <button type="submit" class="btn-primary">Start Quick Feedback</button>
-    </form>
+  <div class="glass-box">
+    <div class="emoji">💖</div>
+    <p class="message">
+      {{ welcome_message|safe }}
+    </p>
   </div>
+  <p class="subtext">يسعدنا نسمع رأيك وملاحظاتك لتحسين تجربتنا باستمرار</p> 
+
+  <form method="get" action="/patient-survey" id="continue-form">
+    <input type="hidden" name="session_data" value="{{ session_data|e }}">
+    <button type="submit" class="btn-primary">ابدئي التقييم السريع</button>
+  </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('darkToggle').addEventListener('change', function() {
-    document.body.classList.toggle('dark');
-  });
-
   // Store session - fix JavaScript linter issues
   try {
     const sessionDataElement = document.querySelector('input[name="session_data"]');
@@ -101,13 +99,6 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (error) {
     console.log('Error parsing session data:', error);
   }
-
-  let timeout = setTimeout(() => {
-    document.getElementById('continue-form').submit();
-  }, 5000);
-
-  document.addEventListener('click', () => clearTimeout(timeout));
-  document.addEventListener('keydown', () => clearTimeout(timeout));
 });
 </script>
 {% endblock %}

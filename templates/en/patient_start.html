@@ -32,7 +32,7 @@ body {
     --glow: #F6EBE7;
 }
 
-body.dark {
+html.dark {
     --bg: #2e2e2e;
     --card-bg: rgba(30, 30, 30, 0.7);
     --text: #F4EFE9;
@@ -170,6 +170,86 @@ h1 {
     color: var(--title);
 }
 
+.inspirational-text {
+    color: var(--accent1);
+    font-size: 1.1rem;
+    font-style: italic;
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+    opacity: 0.95;
+    
+    /* Glassy futuristic styling */
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.25) 0%, 
+        rgba(255, 255, 255, 0.15) 50%, 
+        rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    box-shadow: 
+        0 8px 32px rgba(184, 93, 121, 0.15),
+        0 4px 16px rgba(184, 93, 121, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    
+    /* Futuristic glow effect */
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    
+    /* Subtle animation */
+    animation: gentleGlow 4s ease-in-out infinite alternate;
+}
+
+.inspirational-text::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        rgba(184, 93, 121, 0.3) 0%, 
+        rgba(153, 46, 79, 0.2) 50%, 
+        rgba(184, 93, 121, 0.3) 100%);
+    border-radius: 18px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.inspirational-text:hover::before {
+    opacity: 1;
+}
+
+.inspirational-text:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(184, 93, 121, 0.2),
+        0 6px 20px rgba(184, 93, 121, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Dark mode styling for inspirational text */
+html.dark .inspirational-text {
+    color: var(--title);
+}
+
+@keyframes gentleGlow {
+    0% {
+        box-shadow: 
+            0 8px 32px rgba(184, 93, 121, 0.15),
+            0 4px 16px rgba(184, 93, 121, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    100% {
+        box-shadow: 
+            0 8px 32px rgba(184, 93, 121, 0.2),
+            0 4px 16px rgba(184, 93, 121, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+}
+
 .subtitle {
     opacity: 0.8;
     margin-bottom: 1rem;
@@ -199,6 +279,60 @@ input[type="text"], select {
     box-sizing: border-box;
 }
 
+/* RTL support for input fields */
+input[type="text"].rtl, select.rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+input[type="text"].rtl::placeholder {
+    text-align: right;
+    direction: rtl;
+}
+
+label.rtl {
+    text-align: right;
+    direction: rtl;
+}
+
+/* RTL support for option groups */
+.option-group.rtl {
+    direction: rtl;
+    justify-content: flex-end;
+}
+
+.language-selector.rtl {
+    direction: rtl;
+}
+
+.language-selector.rtl label {
+    text-align: center;
+}
+
+/* RTL support for sliding indicator */
+.language-selector.rtl::before {
+    transform: translateX(100%);
+}
+
+.language-selector.rtl.slide-right::before {
+    transform: translateX(0%);
+}
+
+/* RTL support for auto-selected elements */
+.auto-selected.rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+.auto-selected.rtl::before {
+    margin-right: 0 !important;
+    margin-left: 12px !important;
+}
+
+.auto-selected.rtl .auto-selected-text {
+    text-align: right;
+}
+
 /* Procedure checkboxes styling */
 .procedure-checkboxes {
     display: flex;
@@ -210,6 +344,23 @@ input[type="text"], select {
     border-radius: 12px;
     background: var(--input-bg);
     padding: 0.4rem;
+    transition: all 0.3s ease;
+}
+
+/* RTL support for Arabic */
+.procedure-checkboxes.rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+.procedure-checkboxes.rtl .procedure-checkbox {
+    direction: rtl;
+    text-align: right;
+}
+
+.procedure-checkboxes.rtl .procedure-checkbox label {
+    flex-direction: row-reverse;
+    text-align: right;
 }
 
 .procedure-checkbox {
@@ -265,6 +416,7 @@ input[type="text"], select {
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
 }
 
 .selected-procedures-display h4 {
@@ -278,6 +430,20 @@ input[type="text"], select {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+}
+
+/* RTL support for selected procedures */
+.selected-procedures-display.rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+.selected-procedures-display.rtl h4 {
+    text-align: right;
+}
+
+.selected-procedures-display.rtl .selected-procedures-list {
+    justify-content: flex-end;
 }
 
 .selected-procedure-tag {
@@ -350,8 +516,29 @@ input:focus, select:focus {
 
 .language-selector {
     display: flex;
-    gap: 0.7rem;
+    gap: 0;
     justify-content: center;
+    position: relative;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 4px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.language-selector::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 10px rgba(184, 93, 121, 0.3);
+    z-index: 1;
 }
 
 .language-selector input {
@@ -360,15 +547,43 @@ input:focus, select:focus {
 
 .language-selector label {
     padding: 0.5rem 1rem;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    background: transparent;
     cursor: pointer;
-    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+    position: relative;
+    border: none;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
+    color: var(--text);
+    z-index: 2;
+    flex: 1;
+}
+
+.language-selector label:hover {
+    transform: translateY(-0.5px) scale(1.02);
 }
 
 .language-selector input:checked + label {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid var(--accent1);
+    color: white;
+    font-weight: 600;
+}
+
+/* Slide the indicator to the right for Arabic (second option) */
+.language-selector input:nth-child(4):checked ~ .language-selector::before,
+.language-selector input[id="lang-ar"]:checked ~ .language-selector::before {
+    transform: translateX(100%);
+}
+
+/* For English pages, slide for Arabic option */
+.language-selector input[id="lang-ar"]:checked ~ .language-selector::before {
+    transform: translateX(100%);
+}
+
+/* Move the indicator with JavaScript for dynamic handling */
+.language-selector.slide-right::before {
+    transform: translateX(100%);
 }
 
 button {
@@ -522,32 +737,40 @@ button:hover {
 
 <div class="toggle-wrapper">
     <label class="switch">
-        <input type="checkbox" id="darkToggle" />
+        <input type="checkbox" id="themeToggle" />
         <span class="slider"></span>
     </label>
 </div>
 
-<h1 class="title-color">Patient Intake 🌸</h1>
-<p class="subtitle">Fill in the patient details for review preparation</p>
+<div class="content-wrapper" id="main-content">
+    <h1 class="title-color">Patient Intake 🌸</h1>
+    <p class="inspirational-text">🫵🏻🦋✨Keep going, as your strength is half your beauty✨🦋🫵🏻</p>
+    <p class="subtitle">Fill in the patient details for review preparation</p>
 
 <form method="post" action="/patient-details" id="patient-form" 
-      data-auto-doctor-id="{% if auto_select_doctor and not auto_select_procedure %}{{ auto_doctor.id }}{% endif %}">
+      data-auto-doctor-id="{% if auto_select_doctor and not auto_select_procedure %}{{ auto_doctor.id }}{% endif %}"
+      data-saved-doctor-id="{{ form_state.doctor_id or '' }}"
+      data-saved-procedure-ids="{{ form_state.procedure_ids|join(',') if form_state.procedure_ids else '' }}">
     
     <div class="login-box">
         <label for="patient-name">Patient Name</label>
-        <input type="text" id="patient-name" name="patient_name" placeholder="Enter full name" required />
+        <input type="text" id="patient-name" name="patient_name" placeholder="Enter full name" 
+               value="{{ form_state.patient_name or '' }}" required />
         
         <label for="doctor-select">Select your doctor:</label>
         {% if auto_select_doctor %}
             <div class="auto-selected">
-                <span class="auto-selected-text">{{ auto_doctor.name }}</span>
+                <span class="auto-selected-text">{{ auto_doctor.name_en }}</span>
                 <input type="hidden" id="doctor-select" name="doctor_id" value="{{ auto_doctor.id }}" required>
             </div>
         {% else %}
             <select id="doctor-select" name="doctor_id" required>
                 <option value="">Choose your doctor</option>
                 {% for doctor in doctors %}
-                <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+                <option value="{{ doctor.id }}" 
+                        {% if form_state.doctor_id and form_state.doctor_id|string == doctor.id|string %}selected{% endif %}>
+                    {{ doctor.name_en }}
+                </option>
                 {% endfor %}
             </select>
         {% endif %}
@@ -555,7 +778,7 @@ button:hover {
         <label for="procedure-select">Select your procedures (multiple allowed):</label>
         {% if auto_select_procedure %}
             <div class="auto-selected">
-                <span class="auto-selected-text">{{ auto_procedure.name }}</span>
+                <span class="auto-selected-text">{{ auto_procedure.name_en }}</span>
                 <input type="hidden" name="procedure_ids" value="{{ auto_procedure.id }}">
             </div>
         {% else %}
@@ -571,20 +794,25 @@ button:hover {
         <label>Patient Status</label>
         <div class="option-group">
             <label class="option-pill">
-                <input type="radio" name="status" value="new" checked />
+                <input type="radio" name="status" value="new" 
+                       {% if not form_state.status or form_state.status == 'new' %}checked{% endif %} />
                 New
             </label>
             <label class="option-pill">
-                <input type="radio" name="status" value="returning" />
+                <input type="radio" name="status" value="returning" 
+                       {% if form_state.status == 'returning' %}checked{% endif %} />
                 Returning
             </label>
         </div>
         
         <label>Mood</label>
         <div class="option-group emoji-group">
-            <label class="emoji-pill">😊<input type="radio" name="mood" value="happy" /></label>
-            <label class="emoji-pill">😐<input type="radio" name="mood" value="neutral" /></label>
-            <label class="emoji-pill">😞<input type="radio" name="mood" value="sad" /></label>
+            <label class="emoji-pill">😊<input type="radio" name="mood" value="happy" 
+                   {% if form_state.mood == 'happy' %}checked{% endif %} /></label>
+            <label class="emoji-pill">😐<input type="radio" name="mood" value="neutral" 
+                   {% if form_state.mood == 'neutral' %}checked{% endif %} /></label>
+            <label class="emoji-pill">😞<input type="radio" name="mood" value="sad" 
+                   {% if form_state.mood == 'sad' %}checked{% endif %} /></label>
         </div>
         
         <label>Preferred Language</label>
@@ -595,13 +823,17 @@ button:hover {
             <label for="lang-ar">العربية</label>
         </div>
         
-        <button type="submit">Continue</button>
+        <button type="submit" id="submit-btn">
+            <span id="submit-btn-text">Continue</span>
+        </button>
     </div>
 </form>
 
-<div class="navigation">
-    <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -609,32 +841,64 @@ button:hover {
 document.addEventListener('DOMContentLoaded', function() {
     const doctorSelect = document.getElementById('doctor-select');
     const procedureCheckboxes = document.getElementById('procedure-checkboxes');
-    const darkToggle = document.getElementById('darkToggle');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitBtnText = document.getElementById('submit-btn-text');
     
-    // Dark mode toggle
-    darkToggle.addEventListener('change', function() {
-        document.body.classList.toggle('dark');
+    // Language reset logic - only reset to English on first visit, not on reload
+    function handleLanguageReset() {
+        const savedLanguage = localStorage.getItem('language');
+        const isPageReload = sessionStorage.getItem('pageReloaded');
+        
+        // Mark page as reloaded for subsequent visits
+        sessionStorage.setItem('pageReloaded', 'true');
+    }
+    
+    // Call language reset logic
+    handleLanguageReset();
+    
+    // Dynamic button text based on patient status
+    function updateSubmitButtonText() {
+        const selectedStatus = document.querySelector('input[name="status"]:checked');
+        if (selectedStatus) {
+            const isNew = selectedStatus.value === 'new';
+            submitBtnText.textContent = isNew ? 'Welcome!' : 'Welcome back!';
+        } else {
+            submitBtnText.textContent = 'Continue';
+        }
+    }
+    
+    // Add event listeners to status radio buttons
+    const statusInputs = document.querySelectorAll('input[name="status"]');
+    statusInputs.forEach(input => {
+        input.addEventListener('change', updateSubmitButtonText);
     });
     
+    // Initialize button text
+    updateSubmitButtonText();
+    
     // Function to load procedures for a doctor
-    async function loadProcedures(doctorId) {
+    async function loadProcedures(doctorId, language = 'en', selectedProcedureNames = []) {
         if (!doctorId) {
             procedureCheckboxes.innerHTML = '<div class="procedure-loading">First select a doctor</div>';
-            return;
+            return Promise.resolve();
         }
+        
+        console.log('Loading procedures for doctor:', doctorId, 'language:', language);
         
         // Clear procedure options
         procedureCheckboxes.innerHTML = '<div class="procedure-loading">Loading...</div>';
         
         try {
-            const response = await fetch(`/api/doctors/${doctorId}/procedures`);
+            const response = await fetch(`/api/doctors/${doctorId}/procedures?language=${language}`);
             const procedures = await response.json();
+            
+            console.log('Loaded procedures:', procedures);
             
             // Clear and populate procedure checkboxes
             procedureCheckboxes.innerHTML = '';
             if (procedures.length === 0) {
                 procedureCheckboxes.innerHTML = '<div class="no-procedures">No procedures available for this doctor</div>';
-                return;
+                return Promise.resolve();
             }
             
             procedures.forEach(procedure => {
@@ -652,10 +916,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkbox = checkboxDiv.querySelector('input[type="checkbox"]');
                 checkbox.addEventListener('change', updateSelectedProceduresDisplay);
             });
+            
+            // Restore selected procedures if any were provided
+            if (selectedProcedureNames.length > 0) {
+                restoreSelectedProcedures(selectedProcedureNames);
+            }
+            
+            return Promise.resolve();
         } catch (error) {
             console.error('Error fetching procedures:', error);
             procedureCheckboxes.innerHTML = '<div class="error">Error loading procedures</div>';
+            return Promise.reject(error);
         }
+    }
+    
+    // Function to restore procedure selections by IDs
+    function restoreProcedureSelections(procedureIds) {
+        if (!procedureIds || procedureIds.length === 0) return;
+        
+        console.log('Restoring procedure selections:', procedureIds);
+        const checkboxes = document.querySelectorAll('input[name="procedure_ids"]');
+        let restoredCount = 0;
+        
+        checkboxes.forEach(checkbox => {
+            if (procedureIds.includes(checkbox.value)) {
+                checkbox.checked = true;
+                restoredCount++;
+            }
+        });
+        
+        console.log('Restored', restoredCount, 'procedure selections');
+        updateSelectedProceduresDisplay();
     }
     
     // Function to update selected procedures display
@@ -663,6 +954,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedProceduresDisplay = document.getElementById('selected-procedures-display');
         const selectedProceduresList = document.getElementById('selected-procedures-list');
         const selectedCheckboxes = document.querySelectorAll('input[name="procedure_ids"]:checked');
+        
+        console.log('Updating selected procedures display. Selected:', selectedCheckboxes.length);
         
         if (selectedCheckboxes.length === 0) {
             selectedProceduresDisplay.style.display = 'none';
@@ -674,6 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         selectedCheckboxes.forEach(checkbox => {
             const procedureName = checkbox.getAttribute('data-procedure-name');
+            console.log('Adding procedure to display:', procedureName);
             const tag = document.createElement('span');
             tag.className = 'selected-procedure-tag';
             tag.textContent = procedureName;
@@ -681,17 +975,140 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Update procedures when doctor is selected (only if doctor select is a dropdown)
-    if (doctorSelect && doctorSelect.tagName === 'SELECT') {
-        doctorSelect.addEventListener('change', function() {
-            loadProcedures(this.value);
+    // Function to get current selected language
+    function getCurrentLanguage() {
+        const selectedLanguage = document.querySelector('input[name="language"]:checked');
+        return selectedLanguage ? (selectedLanguage.value === 'Arabic' ? 'ar' : 'en') : 'en';
+    }
+    
+    // Function to collect all current form state
+    function collectFormState() {
+        const formState = {};
+        
+        // Patient name
+        const patientName = document.getElementById('patient-name');
+        if (patientName) {
+            formState.patient_name = patientName.value;
+        }
+        
+        // Doctor selection
+        const doctorSelect = document.getElementById('doctor-select');
+        if (doctorSelect) {
+            formState.doctor_id = doctorSelect.value;
+        }
+        
+        // Selected procedures
+        const selectedProcedures = document.querySelectorAll('input[name="procedure_ids"]:checked');
+        if (selectedProcedures.length > 0) {
+            formState.procedure_ids = Array.from(selectedProcedures).map(cb => cb.value);
+        }
+        
+        // Patient status
+        const selectedStatus = document.querySelector('input[name="status"]:checked');
+        if (selectedStatus) {
+            formState.status = selectedStatus.value;
+        }
+        
+        // Mood
+        const selectedMood = document.querySelector('input[name="mood"]:checked');
+        if (selectedMood) {
+            formState.mood = selectedMood.value;
+        }
+        
+        return formState;
+    }
+    
+    // Function to update sliding indicator position
+    function updateSlideIndicator() {
+        const languageSelector = document.querySelector('.language-selector');
+        const arabicRadio = document.getElementById('lang-ar');
+        
+        if (arabicRadio && arabicRadio.checked) {
+            languageSelector.classList.add('slide-right');
+        } else {
+            languageSelector.classList.remove('slide-right');
+        }
+    }
+    
+    // Initialize sliding indicator position
+    updateSlideIndicator();
+    
+    // Simple language change function
+    function changeLanguage(newLanguage) {
+        // Collect current form state
+        const formState = collectFormState();
+        
+        // Submit language change to server with form state
+        const formData = new FormData();
+        formData.append('language', newLanguage);
+        
+        // Add all form state to the request
+        Object.keys(formState).forEach(key => {
+            if (Array.isArray(formState[key])) {
+                formState[key].forEach(value => {
+                    formData.append(key, value);
+                });
+            } else {
+                formData.append(key, formState[key]);
+            }
+        });
+        
+        // Submit and reload - server will handle form state preservation
+        fetch('/change-language', {
+            method: 'POST',
+            body: formData
+        }).then(() => {
+            window.location.reload();
         });
     }
     
-    // Auto-load procedures if doctor is auto-selected
-    const autoDoctorId = document.getElementById('patient-form').getAttribute('data-auto-doctor-id');
+    // Add language change event listeners
+    const languageInputs = document.querySelectorAll('input[name="language"]');
+    languageInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Update sliding indicator immediately
+            updateSlideIndicator();
+            
+            // Change language
+            changeLanguage(this.value);
+        });
+    });
+    
+    // Update procedures when doctor is selected (only if doctor select is a dropdown)
+    if (doctorSelect && doctorSelect.tagName === 'SELECT') {
+        doctorSelect.addEventListener('change', function() {
+            const language = getCurrentLanguage();
+            loadProcedures(this.value, language);
+        });
+    }
+    
+    // Auto-load procedures if doctor is auto-selected or if there's a saved doctor selection
+    const patientForm = document.getElementById('patient-form');
+    const autoDoctorId = patientForm.getAttribute('data-auto-doctor-id');
+    const savedDoctorId = patientForm.getAttribute('data-saved-doctor-id');
+    const savedProcedureIdsStr = patientForm.getAttribute('data-saved-procedure-ids');
+    const savedProcedureIds = savedProcedureIdsStr ? savedProcedureIdsStr.split(',').filter(id => id.trim()) : [];
+    
     if (autoDoctorId) {
-        loadProcedures(autoDoctorId);
+        const language = getCurrentLanguage();
+        loadProcedures(autoDoctorId, language);
+    } else if (savedDoctorId && doctorSelect && doctorSelect.tagName === 'SELECT') {
+        // If we have a saved doctor selection, load procedures for that doctor
+        const language = getCurrentLanguage();
+        loadProcedures(savedDoctorId, language).then(() => {
+            // After procedures are loaded, restore saved procedure selections
+            restoreProcedureSelections(savedProcedureIds);
+        });
+    }
+    
+    // If we have saved procedures but no saved doctor (shouldn't happen, but just in case)
+    // or if we need to update procedure names after language switch
+    const currentDoctorId = doctorSelect ? doctorSelect.value : null;
+    if (savedProcedureIds.length > 0 && currentDoctorId && !autoDoctorId) {
+        const language = getCurrentLanguage();
+        loadProcedures(currentDoctorId, language).then(() => {
+            restoreProcedureSelections(savedProcedureIds);
+        });
     }
     
     // Handle auto-selected procedure display
@@ -726,3 +1143,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %} 
+ 

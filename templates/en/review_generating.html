@@ -33,13 +33,21 @@
         {% endfor %}
         <input type="hidden" name="all_staff_selected" value="{{ form_data.all_staff_selected }}">
         
-        <label for="message-to-doctor">💬 Your private note</label>
+        <label for="message-to-doctor"> Your private note 💬</label>
         <textarea 
             id="message-to-doctor" 
             name="message_to_doctor" 
             placeholder="Let your doctor know how you feel..."
         ></textarea>
         <small>Only your doctor will see this. It stays private.</small>
+        
+        <!-- Selected procedures display -->
+        <div class="selected-procedures-display" id="selected-procedures-display">
+            <h4>Selected Procedures:</h4>
+            <div class="selected-procedures-list" id="selected-procedures-list">
+                <!-- Procedures will be populated by JavaScript -->
+            </div>
+        </div>
 
         <div class="button-group">
             <button type="button" id="skip-btn" class="skip-btn">Skip</button>
@@ -67,6 +75,49 @@ document.addEventListener('DOMContentLoaded', function () {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 200) + 'px';
     });
+    
+    // Display selected procedures
+    function displaySelectedProcedures() {
+        const sessionDataInput = document.querySelector('input[name="session_data"]');
+        const selectedProceduresDisplay = document.getElementById('selected-procedures-display');
+        const selectedProceduresList = document.getElementById('selected-procedures-list');
+        
+        if (sessionDataInput && sessionDataInput.value) {
+            try {
+                const sessionData = JSON.parse(sessionDataInput.value);
+                let procedureNames = [];
+                
+                // Support both old and new format
+                if (sessionData.procedure_names && Array.isArray(sessionData.procedure_names)) {
+                    procedureNames = sessionData.procedure_names;
+                } else if (sessionData.procedure_name) {
+                    procedureNames = [sessionData.procedure_name];
+                }
+                
+                if (procedureNames.length > 0) {
+                    selectedProceduresDisplay.style.display = 'block';
+                    selectedProceduresList.innerHTML = '';
+                    
+                    procedureNames.forEach(procedureName => {
+                        const tag = document.createElement('span');
+                        tag.className = 'selected-procedure-tag';
+                        tag.textContent = procedureName;
+                        selectedProceduresList.appendChild(tag);
+                    });
+                } else {
+                    selectedProceduresDisplay.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Error parsing session data for procedures:', e);
+                selectedProceduresDisplay.style.display = 'none';
+            }
+        } else {
+            selectedProceduresDisplay.style.display = 'none';
+        }
+    }
+    
+    // Initialize procedure display
+    displaySelectedProcedures();
 });
 </script>
 
@@ -81,7 +132,7 @@ body.review-generating-page {
     --text: #4E3F3B;
 }
 
-body.review-generating-page.dark {
+html.dark body.review-generating-page {
     --bg: #1d1d1d;
     --glow: #7D635C;
     --card-bg: rgba(30, 30, 30, 0.4);
@@ -268,6 +319,64 @@ button {
 .skip-btn:hover {
     background: rgba(184, 93, 121, 0.1);
     transform: scale(1.02);
+}
+
+/* Selected procedures display */
+.selected-procedures-display {
+    margin-top: 1rem;
+    padding: 0.7rem;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.selected-procedures-display h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent1);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.selected-procedures-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-start;
+}
+
+.selected-procedure-tag {
+    display: inline-block;
+    background: rgba(170, 65, 97, 0.7);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.selected-procedure-tag:hover {
+    background: rgba(184, 93, 121, 0.8);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>
 {% endblock %} 

@@ -3,307 +3,7 @@
 {% block title %}Patient Survey{% endblock %}
 {% block body_class %}patient-survey-page{% endblock %}
 
-{% block content %}
-<div class="background">
-    <div class="glow"></div>
-    <div class="float-circle pink"></div>
-    <div class="float-circle wine"></div>
-</div>
-
-<div class="toggle-wrapper">
-    <label class="switch">
-        <input type="checkbox" id="darkToggle" />
-        <span class="slider"></span>
-    </label>
-</div>
-
-
-    <h1 class="title-color">📝 Quick Feedback</h1>
-    <h2 class="subtitle">How was your experience?</h2>
-    
-    <!-- <div class="selected-procedures" id="selected-procedures-display" style="display: none;">
-        <h3>Selected Procedures:</h3>
-        <div id="procedure-list"></div>
-    </div> -->
-    
-    <form method="post" action="/review-generating" id="survey-form">
-        <input type="hidden" name="session_data" id="session-data-input">
-        
-        <div class="form-group">
-            <label class="form-label">Overall Rating:</label>
-            <div class="rating-group">
-                <label class="star-rating">
-                    <input type="radio" name="rating" value="1">
-                    <span class="stars">⭐</span>
-                </label>
-                <label class="star-rating">
-                    <input type="radio" name="rating" value="2">
-                    <span class="stars">⭐⭐</span>
-                </label>
-                <label class="star-rating">
-                    <input type="radio" name="rating" value="3">
-                    <span class="stars">⭐⭐⭐</span>
-                </label>
-                <label class="star-rating">
-                    <input type="radio" name="rating" value="4">
-                    <span class="stars">⭐⭐⭐⭐</span>
-                </label>
-                <label class="star-rating">
-                    <input type="radio" name="rating" value="5" checked>
-                    <span class="stars">⭐⭐⭐⭐⭐</span>
-                </label>
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label class="form-label">What stood out about your experience? (Select all that apply)</label>
-            <div class="checkbox-group">
-                {% for factor in factors %}
-                <label class="factor-checkbox">
-                    <input type="checkbox" name="selected_factors" value="{{ factor.name }}">
-                    <span class="checkmark">{{ factor.name }}</span>
-                </label>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label class="form-label">Who would you like to thank in your review?</label>
-            <div class="staff-selection-group">
-                <label class="staff-checkbox doctor-required">
-                    <input type="checkbox" name="selected_staff" value="doctor" id="doctor-checkbox" checked disabled>
-                    <span class="checkmark">Doctor</span>
-                </label>
-                <!-- Hidden input to ensure doctor is always submitted -->
-                <input type="hidden" name="selected_staff" value="doctor">
-                <label class="staff-checkbox">
-                    <input type="checkbox" name="selected_staff" value="coordinator" id="coordinator-checkbox">
-                    <span class="checkmark">Coordinator</span>
-                </label>
-                <label class="staff-checkbox">
-                    <input type="checkbox" name="selected_staff" value="nursing_team" id="nursing-checkbox">
-                    <span class="checkmark">Nursing Team</span>
-                </label>
-            </div>
-        </div>
-        
-        <!--<div class="form-group">
-            <label class="form-label">Additional Comments (Optional):</label>
-            <div class="comments-info">
-                <p>💡 Share specific details to help generate a personalized review. Concerns can be sent privately to the doctor later.</p>
-            </div>
-            <button type="button" id="toggle-comments" class="toggle-btn">+ Add Comments</button>
-            <textarea id="additional-comments" name="additional_comments" placeholder="Share any specific details about your experience..." style="display: none;"></textarea>
-        </div> -->
-        
-        <!--<div class="feedback-note">
-            <p>🔒 Private concerns can be sent to the doctor in the next step.</p>
-        </div> -->
-        
-        <button type="submit" class="generate-btn">Generate Review Options</button>
-    </form>
-    
-    <div class="navigation">
-        <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
-    </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const darkToggle = document.getElementById('darkToggle');
-    
-    // Dark mode toggle
-    darkToggle.addEventListener('change', function() {
-        document.body.classList.toggle('dark');
-    });
-    
-    // Load session data from sessionStorage
-    const sessionData = sessionStorage.getItem('patientSessionData');
-    console.log('Session data from storage:', sessionData);
-    if (sessionData) {
-        document.getElementById('session-data-input').value = sessionData;
-        console.log('Session data set in form field:', sessionData);
-        
-        // Display selected procedures
-        try {
-            const sessionInfo = JSON.parse(sessionData);
-            const procedureDisplay = document.getElementById('selected-procedures-display');
-            const procedureList = document.getElementById('procedure-list');
-            
-            if (sessionInfo.procedure_names && sessionInfo.procedure_names.length > 0) {
-                procedureDisplay.style.display = 'block';
-                procedureList.innerHTML = sessionInfo.procedure_names.map(name => 
-                    `<span class="procedure-tag">${name}</span>`
-                ).join('');
-            } else if (sessionInfo.procedure_name) {
-                // Fallback for single procedure
-                procedureDisplay.style.display = 'block';
-                procedureList.innerHTML = `<span class="procedure-tag">${sessionInfo.procedure_name}</span>`;
-            }
-        } catch (e) {
-            console.error('Error parsing session data for procedures:', e);
-        }
-    } else {
-        console.error('No session data found in sessionStorage');
-        alert('Session data not found. Please start from the beginning.');
-    }
-    
-    // Toggle comments textarea
-    const toggleCommentsBtn = document.getElementById('toggle-comments');
-    const commentsTextarea = document.getElementById('additional-comments');
-    
-    toggleCommentsBtn.addEventListener('click', function() {
-        if (commentsTextarea.style.display === 'none') {
-            commentsTextarea.style.display = 'block';
-            toggleCommentsBtn.textContent = '- Hide Comments';
-            commentsTextarea.focus();
-        } else {
-            commentsTextarea.style.display = 'none';
-            toggleCommentsBtn.textContent = '+ Add Comments';
-        }
-    });
-    
-    // Staff selection logic
-    const doctorCheckbox = document.getElementById('doctor-checkbox');
-    const coordinatorCheckbox = document.getElementById('coordinator-checkbox');
-    const nursingCheckbox = document.getElementById('nursing-checkbox');
-    
-    // Handle staff selection for team mention
-    function handleStaffSelection() {
-        // Doctor is always selected (disabled checkbox + hidden input)
-        const allStaffSelected = coordinatorCheckbox.checked && nursingCheckbox.checked;
-        
-        // Add hidden field to indicate if all staff are selected (for "Dr. Name and her team" logic)
-        let allStaffInput = document.getElementById('all-staff-selected');
-        if (!allStaffInput) {
-            allStaffInput = document.createElement('input');
-            allStaffInput.type = 'hidden';
-            allStaffInput.name = 'all_staff_selected';
-            allStaffInput.id = 'all-staff-selected';
-            document.getElementById('survey-form').appendChild(allStaffInput);
-        }
-        allStaffInput.value = allStaffSelected ? 'true' : 'false';
-    }
-    
-    // Add event listeners to staff checkboxes
-    [coordinatorCheckbox, nursingCheckbox].forEach(checkbox => {
-        checkbox.addEventListener('change', handleStaffSelection);
-    });
-    
-    // Initial staff selection handling
-    handleStaffSelection();
-    
-    // Form validation
-    document.getElementById('survey-form').addEventListener('submit', function(e) {
-        const rating = document.querySelector('input[name="rating"]:checked');
-        const factors = document.querySelectorAll('input[name="selected_factors"]:checked');
-        const staff = document.querySelectorAll('input[name="selected_staff"]:checked');
-        
-        console.log('Form submission - Rating selected:', rating ? rating.value : 'none');
-        console.log('Form submission - Factors selected:', factors.length);
-        console.log('Form submission - Staff selected:', staff.length);
-        
-        if (!rating) {
-            e.preventDefault();
-            alert('Please select a rating.');
-            return;
-        }
-        
-        if (factors.length === 0) {
-            e.preventDefault();
-            alert('Please select at least one factor that stood out.');
-            return;
-        }
-        
-        // Doctor is always selected, so we just need to check if form is properly filled
-        // No need to check staff.length since doctor is always included via hidden input
-        
-        // Debug: Check what's being submitted
-        const sessionDataInput = document.getElementById('session-data-input');
-        console.log('Session data being submitted:', sessionDataInput.value);
-        
-        if (!sessionDataInput.value) {
-            e.preventDefault();
-            alert('Session data is missing. Please start from the beginning.');
-            return;
-        }
-        
-        console.log('Form validation passed - submitting form');
-    });
-    
-    // Add interactive star rating
-    const starRatings = document.querySelectorAll('.star-rating');
-    starRatings.forEach(rating => {
-        rating.addEventListener('click', function() {
-            starRatings.forEach(r => r.classList.remove('selected'));
-            this.classList.add('selected');
-            
-            // Also select all stars up to this one
-            const value = parseInt(this.querySelector('input').value);
-            starRatings.forEach((r, index) => {
-                if (index < value) {
-                    r.classList.add('highlighted');
-                } else {
-                    r.classList.remove('highlighted');
-                }
-            });
-        });
-    });
-    
-    // Initialize default 5-star selection
-    starRatings[4].classList.add('selected');
-    starRatings.forEach((r, index) => {
-        if (index < 5) {
-            r.classList.add('highlighted');
-        }
-    });
-    
-    // Adjust checkbox grid columns based on number of factors
-    const factorCheckboxes = document.querySelectorAll('.factor-checkbox');
-    const checkboxGroup = document.querySelector('.checkbox-group');
-    
-    if (factorCheckboxes.length > 6) {
-        checkboxGroup.style.gridTemplateColumns = 'repeat(3, 1fr)';
-        checkboxGroup.classList.add('three-columns');
-    } else if (factorCheckboxes.length > 3) {
-        checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        checkboxGroup.classList.remove('three-columns');
-    } else {
-        checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
-        checkboxGroup.classList.remove('three-columns');
-    }
-    
-    // Responsive adjustment for mobile
-    function adjustGridForScreen() {
-        if (window.innerWidth <= 768) {
-            if (factorCheckboxes.length > 4) {
-                checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                checkboxGroup.classList.remove('three-columns');
-            } else {
-                checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
-                checkboxGroup.classList.remove('three-columns');
-            }
-        } else {
-            if (factorCheckboxes.length > 6) {
-                checkboxGroup.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                checkboxGroup.classList.add('three-columns');
-            } else if (factorCheckboxes.length > 3) {
-                checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
-                checkboxGroup.classList.remove('three-columns');
-            } else {
-                checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
-                checkboxGroup.classList.remove('three-columns');
-            }
-        }
-    }
-    
-    // Initial adjustment
-    adjustGridForScreen();
-    
-    // Adjust on window resize
-    window.addEventListener('resize', adjustGridForScreen);
-});
-</script>
-
+{% block extra_css %}
 <style>
 /* Override base styles for this specific page */
 body {
@@ -320,129 +20,8 @@ body {
     color: var(--text);
 }
 
-/* CSS Variables */
-:root {
-    --bg: #FFF7F4;
-    --card-bg: rgba(255, 255, 255, 0.65);
-    --text: #7D635C;
-    --title: #B85D79;
-    --accent1: #B85D79;
-    --accent2: #992E4F;
-    --input-bg: #F8F6F3;
-    --glow: #F6EBE7;
-}
-
-body.dark {
-    --bg: #2e2e2e;
-    --card-bg: rgba(30, 30, 30, 0.7);
-    --text: #F4EFE9;
-    --title: #DBB3A9;
-    --accent1: #992E4F;
-    --accent2: #B85D79;
-    --input-bg: #3a3a3a;
-    --glow: #7D635C;
-}
-
-.toggle-wrapper {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    z-index: 10;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
-}
-
-.switch input { display: none; }
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0;
-    right: 0; bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 20px; width: 20px;
-    left: 4px; bottom: 3px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: var(--accent1);
-}
-
-input:checked + .slider:before {
-    transform: translateX(24px);
-}
-
-.background {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    overflow: hidden;
-}
-
-.glow {
-    position: absolute;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, var(--glow), transparent 70%);
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: pulse 6s ease-in-out infinite;
-    filter: blur(60px);
-}
-
-.float-circle {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.25;
-    animation: float 20s infinite ease-in-out;
-    filter: blur(30px);
-}
-
-.pink {
-    width: 250px;
-    height: 250px;
-    background: #ECD9D2;
-    top: 20%;
-    left: 10%;
-}
-
-.wine {
-    width: 300px;
-    height: 300px;
-    background: #992E4F;
-    bottom: 15%;
-    right: 10%;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
-}
-
-@keyframes float {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-30px); }
-    100% { transform: translateY(0); }
-}
-
-.container {
+/* Style the base container for this page */
+.patient-survey-page .container {
     text-align: center;
     backdrop-filter: blur(12px);
     background: var(--card-bg);
@@ -796,7 +375,7 @@ textarea::placeholder {
 
 /* Responsive design */
 @media (max-width: 768px) {
-    .container {
+    .patient-survey-page .container {
         padding: 1.5rem 2rem;
         width: 95%;
         max-height: 95vh;
@@ -845,4 +424,330 @@ textarea::placeholder {
     }
 }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="background">
+    <div class="glow"></div>
+    <div class="float-circle pink"></div>
+    <div class="float-circle wine"></div>
+</div>
+
+<div class="toggle-wrapper">
+    <label class="switch">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider"></span>
+    </label>
+</div>
+
+<h1 class="title-color">Quick Feedback 📝</h1>
+<h2 class="subtitle">How was your experience?</h2>
+
+<!-- <div class="selected-procedures" id="selected-procedures-display" style="display: none;">
+    <h3>Selected Procedures:</h3>
+    <div id="procedure-list"></div>
+</div> -->
+
+<form method="post" action="/review-generating" id="survey-form">
+    <input type="hidden" name="session_data" id="session-data-input">
+    
+    <div class="form-group">
+        <label class="form-label">Overall Rating:</label>
+        <div class="rating-group">
+            <label class="star-rating">
+                <input type="radio" name="rating" value="1">
+                <span class="stars">⭐</span>
+            </label>
+            <label class="star-rating">
+                <input type="radio" name="rating" value="2">
+                <span class="stars">⭐⭐</span>
+            </label>
+            <label class="star-rating">
+                <input type="radio" name="rating" value="3">
+                <span class="stars">⭐⭐⭐</span>
+            </label>
+            <label class="star-rating">
+                <input type="radio" name="rating" value="4">
+                <span class="stars">⭐⭐⭐⭐</span>
+            </label>
+            <label class="star-rating">
+                <input type="radio" name="rating" value="5" checked>
+                <span class="stars">⭐⭐⭐⭐⭐</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">What stood out about your experience? (Select all that apply)</label>
+        <div class="checkbox-group">
+            {% for factor in factors %}
+            <label class="factor-checkbox">
+                <input type="checkbox" name="selected_factors" value="{{ factor.name }}">
+                <span class="checkmark">{{ factor.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Who would you like to thank in your review?</label>
+        <div class="staff-selection-group">
+            <label class="staff-checkbox doctor-required">
+                <input type="checkbox" name="selected_staff" value="doctor" id="doctor-checkbox" checked disabled>
+                <span class="checkmark">Doctor</span>
+            </label>
+            <!-- Hidden input to ensure doctor is always submitted -->
+            <input type="hidden" name="selected_staff" value="doctor">
+            <label class="staff-checkbox">
+                <input type="checkbox" name="selected_staff" value="coordinator" id="coordinator-checkbox">
+                <span class="checkmark">Coordinator</span>
+            </label>
+            <label class="staff-checkbox">
+                <input type="checkbox" name="selected_staff" value="nursing_team" id="nursing-checkbox">
+                <span class="checkmark">Nursing Team</span>
+            </label>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Additional Comments (Optional):</label>
+        <div class="comments-info">
+            <p>💡 Share specific details to help generate a personalized review. Concerns can be sent privately to the doctor later.</p>
+        </div>
+        <button type="button" id="toggle-comments" class="toggle-btn">+ Add Comments</button>
+        <textarea id="additional-comments" name="additional_comments" placeholder="Share any specific details about your experience..." style="display: none;"></textarea>
+    </div>
+    
+    <!--<div class="feedback-note">
+        <p>🔒 Private concerns can be sent to the doctor in the next step.</p>
+    </div> -->
+    
+    <button type="submit" class="generate-btn">Generate Review Options</button>
+</form>
+
+<div class="navigation">
+    <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load session data from sessionStorage
+    const sessionData = sessionStorage.getItem('patientSessionData');
+    console.log('Session data from storage:', sessionData);
+    if (sessionData) {
+        document.getElementById('session-data-input').value = sessionData;
+        console.log('Session data set in form field:', sessionData);
+        
+        // Display selected procedures
+        try {
+            const sessionInfo = JSON.parse(sessionData);
+            const procedureDisplay = document.getElementById('selected-procedures-display');
+            const procedureList = document.getElementById('procedure-list');
+            
+            if (sessionInfo.procedure_names && sessionInfo.procedure_names.length > 0) {
+                procedureDisplay.style.display = 'block';
+                procedureList.innerHTML = sessionInfo.procedure_names.map(name => 
+                    `<span class="procedure-tag">${name}</span>`
+                ).join('');
+            } else if (sessionInfo.procedure_name) {
+                // Fallback for single procedure
+                procedureDisplay.style.display = 'block';
+                procedureList.innerHTML = `<span class="procedure-tag">${sessionInfo.procedure_name}</span>`;
+            }
+        } catch (e) {
+            console.error('Error parsing session data for procedures:', e);
+        }
+    } else {
+        console.error('No session data found in sessionStorage');
+        alert('Session data not found. Please start from the beginning.');
+    }
+    
+    // Toggle comments textarea
+    const toggleCommentsBtn = document.getElementById('toggle-comments');
+    const commentsTextarea = document.getElementById('additional-comments');
+    
+    if (toggleCommentsBtn && commentsTextarea) {
+        toggleCommentsBtn.addEventListener('click', function() {
+            if (commentsTextarea.style.display === 'none' || commentsTextarea.style.display === '') {
+                commentsTextarea.style.display = 'block';
+                toggleCommentsBtn.textContent = '- Hide Comments';
+                commentsTextarea.focus();
+            } else {
+                commentsTextarea.style.display = 'none';
+                toggleCommentsBtn.textContent = '+ Add Comments';
+            }
+        });
+    }
+    
+    // Staff selection logic
+    const doctorCheckbox = document.getElementById('doctor-checkbox');
+    const coordinatorCheckbox = document.getElementById('coordinator-checkbox');
+    const nursingCheckbox = document.getElementById('nursing-checkbox');
+    
+    // Handle staff selection for team mention
+    function handleStaffSelection() {
+        // Doctor is always selected (disabled checkbox + hidden input)
+        const allStaffSelected = coordinatorCheckbox.checked && nursingCheckbox.checked;
+        
+        // Add hidden field to indicate if all staff are selected (for "Dr. Name and her team" logic)
+        let allStaffInput = document.getElementById('all-staff-selected');
+        if (!allStaffInput) {
+            allStaffInput = document.createElement('input');
+            allStaffInput.type = 'hidden';
+            allStaffInput.name = 'all_staff_selected';
+            allStaffInput.id = 'all-staff-selected';
+            document.getElementById('survey-form').appendChild(allStaffInput);
+        }
+        allStaffInput.value = allStaffSelected ? 'true' : 'false';
+    }
+    
+    // Add event listeners to staff checkboxes
+    [coordinatorCheckbox, nursingCheckbox].forEach(checkbox => {
+        checkbox.addEventListener('change', handleStaffSelection);
+    });
+    
+    // Initial staff selection handling
+    handleStaffSelection();
+    
+    // Form validation and submission
+    document.getElementById('survey-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const factors = document.querySelectorAll('input[name="selected_factors"]:checked');
+        const staff = document.querySelectorAll('input[name="selected_staff"]:checked');
+        
+        console.log('Form submission - Rating selected:', rating ? rating.value : 'none');
+        console.log('Form submission - Factors selected:', factors.length);
+        console.log('Form submission - Staff selected:', staff.length);
+        
+        if (!rating) {
+            alert('Please select a rating.');
+            return;
+        }
+        
+        if (factors.length === 0) {
+            alert('Please select at least one factor that stood out.');
+            return;
+        }
+        
+        // Debug: Check what's being submitted
+        const sessionDataInput = document.getElementById('session-data-input');
+        console.log('Session data being submitted:', sessionDataInput.value);
+        
+        if (!sessionDataInput.value) {
+            alert('Session data is missing. Please start from the beginning.');
+            return;
+        }
+        
+        console.log('Form validation passed - submitting form via AJAX');
+        
+        // Submit form via AJAX to start background review generation
+        const formData = new FormData(this);
+        formData.append('message_to_doctor', ''); // Empty message for now
+        
+        // Change button text and disable it
+        const submitBtn = document.querySelector('.generate-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Starting Generation...';
+        submitBtn.disabled = true;
+        
+        fetch('/api/generate-reviews-background', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.task_id) {
+                // Redirect to review selection page with task ID
+                window.location.href = `/review-selection?task_id=${data.task_id}`;
+            } else {
+                throw new Error('No task ID received');
+            }
+        })
+        .catch(error => {
+            console.error('Error starting background generation:', error);
+            alert('Error starting review generation. Please try again.');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+    
+    // Add interactive star rating
+    const starRatings = document.querySelectorAll('.star-rating');
+    starRatings.forEach(rating => {
+        rating.addEventListener('click', function() {
+            starRatings.forEach(r => r.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Also select all stars up to this one
+            const value = parseInt(this.querySelector('input').value);
+            starRatings.forEach((r, index) => {
+                if (index < value) {
+                    r.classList.add('highlighted');
+                } else {
+                    r.classList.remove('highlighted');
+                }
+            });
+        });
+    });
+    
+    // Initialize default 5-star selection
+    starRatings[4].classList.add('selected');
+    starRatings.forEach((r, index) => {
+        if (index < 5) {
+            r.classList.add('highlighted');
+        }
+    });
+    
+    // Adjust checkbox grid columns based on number of factors
+    const factorCheckboxes = document.querySelectorAll('.factor-checkbox');
+    const checkboxGroup = document.querySelector('.checkbox-group');
+    
+    if (factorCheckboxes.length > 6) {
+        checkboxGroup.style.gridTemplateColumns = 'repeat(3, 1fr)';
+        checkboxGroup.classList.add('three-columns');
+    } else if (factorCheckboxes.length > 3) {
+        checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
+        checkboxGroup.classList.remove('three-columns');
+    } else {
+        checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
+        checkboxGroup.classList.remove('three-columns');
+    }
+    
+    // Responsive adjustment for mobile
+    function adjustGridForScreen() {
+        if (window.innerWidth <= 768) {
+            if (factorCheckboxes.length > 4) {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            } else {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            }
+        } else {
+            if (factorCheckboxes.length > 6) {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(3, 1fr)';
+                checkboxGroup.classList.add('three-columns');
+            } else if (factorCheckboxes.length > 3) {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(2, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            } else {
+                checkboxGroup.style.gridTemplateColumns = 'repeat(1, 1fr)';
+                checkboxGroup.classList.remove('three-columns');
+            }
+        }
+    }
+    
+    // Initial adjustment
+    adjustGridForScreen();
+    
+    // Adjust on window resize
+    window.addEventListener('resize', adjustGridForScreen);
+});
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/theme.js"></script>
 {% endblock %} 

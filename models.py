@@ -21,28 +21,49 @@ doctor_procedure_association = Table(
 class Doctor(Base):
     __tablename__ = "doctors"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
+    name_en = Column(String, index=True)
+    name_ar = Column(String, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Many-to-many relationship with procedures
     procedures = relationship("Procedure", secondary=doctor_procedure_association, back_populates="doctors")
+    
+    # Helper method to get name in specific language
+    def get_name(self, language="en"):
+        if language == "ar":
+            return self.name_ar or self.name_en
+        return self.name_en or self.name_ar
 
 class Procedure(Base):
     __tablename__ = "procedures"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
+    name_en = Column(String, index=True)
+    name_ar = Column(String, index=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Many-to-many relationship with doctors
     doctors = relationship("Doctor", secondary=doctor_procedure_association, back_populates="procedures")
+    
+    # Helper method to get name in specific language
+    def get_name(self, language="en"):
+        if language == "ar":
+            return self.name_ar or self.name_en
+        return self.name_en or self.name_ar
 
 class Factor(Base):
     __tablename__ = "factors"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
+    name_en = Column(String, index=True)
+    name_ar = Column(String, index=True)
     description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Helper method to get name in specific language
+    def get_name(self, language="en"):
+        if language == "ar":
+            return self.name_ar or self.name_en
+        return self.name_en or self.name_ar
 
 class Review(Base):
     __tablename__ = "reviews"
@@ -96,23 +117,50 @@ def get_db():
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "letmein")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 
-# Default clinic data
+# Default clinic data - now with bilingual structure
 CLINIC_DATA = {
     "procedures": [
-        "Morpheus", "Endolift (face)", "Endolift (neck)", "Endolift (body)",
-        "Filler", "Botox", "Bloom", "Profhilo", "Volite", "Innovyal",
-        "Fractional", "Radiesse", "Sculptra", "Rich", "Salmon PDRN",
-        "Subcision", "Other"
+        {"name_en": "Morpheus", "name_ar": "مورفيوس"},
+        {"name_en": "Endolift (face)", "name_ar": "اندولفت (الوجه)"},
+        {"name_en": "Endolift (neck)", "name_ar": "اندولفت (الرقبة)"},
+        {"name_en": "Endolift (body)", "name_ar": "اندولفت (الجسم)"},
+        {"name_en": "Filler", "name_ar": "فيلر"},
+        {"name_en": "Botox", "name_ar": "بوتوكس"},
+        {"name_en": "Bloom", "name_ar": "بلوم"},
+        {"name_en": "Profhilo", "name_ar": "بروفايلو"},
+        {"name_en": "Volite", "name_ar": "فولايت"},
+        {"name_en": "Innovyal", "name_ar": "انوفيال"},
+        {"name_en": "Fractional", "name_ar": "فراكشنال"},
+        {"name_en": "Radiesse", "name_ar": "رادييس"},
+        {"name_en": "Sculptra", "name_ar": "سكلبترا"},
+        {"name_en": "Rich", "name_ar": "ريتش"},
+        {"name_en": "Salmon PDRN", "name_ar": "سالمون"},
+        {"name_en": "Subcision", "name_ar": "تقطيع ندبات"},
+        {"name_en": "Growth Factors", "name_ar": "محفزات نمو"},
+        {"name_en": "Magellan", "name_ar": "ماجيلان"},
+        {"name_en": "Regenera", "name_ar": "ريجينيرا"},
+        {"name_en": "Exosome", "name_ar": "اكسوزوم"},
+        {"name_en": "Minoxidil", "name_ar": "مينوكسديل"},
+        {"name_en": "Dutasteride", "name_ar": "دوتاستيرايد"},
+        {"name_en": "Other", "name_ar": "أخرى"}
     ],
     "doctors": [
-        {"name": "Dr. Sarah", "procedures": ["Morpheus", "Endolift (face)", "Endolift (neck)", "Endolift (body)", "Filler", "Botox", "Bloom", "Profhilo", "Volite", "Innovyal", "Fractional", "Radiesse", "Sculptra", "Rich", "Salmon PDRN", "Subcision", "Other"]},
-        {"name": "Other", "procedures": ["Other"]}
+        {"name_en": "Dr. Sarah", "name_ar": "دكتورة سارة", "procedures": ["Morpheus", "Endolift (face)", "Endolift (neck)", "Endolift (body)", "Filler", "Botox", "Bloom", "Profhilo", "Volite", "Innovyal", "Fractional", "Radiesse", "Sculptra", "Rich", "Salmon PDRN", "Subcision", "Growth Factors", "Magellan", "Regenera", "Exosome", "Minoxidil", "Dutasteride", "Other"]},
+        {"name_en": "Other", "name_ar": "أخرى", "procedures": ["Other"]}
     ],
     "factors": [
-        "Professional staff", "Clean facility", "Short wait times",
-        "Clear communication", "Comfortable environment", "Modern equipment",
-        "Friendly reception", "Thorough care", "Pain-free procedure",
-        "Excellent results", "Great value", "Follow-up care"
+        {"name_en": "Professional staff", "name_ar": "طاقم مهني"},
+        {"name_en": "Clean facility", "name_ar": "منشأة نظيفة"},
+        {"name_en": "Short wait times", "name_ar": "أوقات انتظار قصيرة"},
+        {"name_en": "Clear communication", "name_ar": "تواصل واضح"},
+        {"name_en": "Comfortable environment", "name_ar": "بيئة مريحة"},
+        {"name_en": "Modern equipment", "name_ar": "معدات حديثة"},
+        {"name_en": "Friendly reception", "name_ar": "استقبال ودود"},
+        {"name_en": "Thorough care", "name_ar": "رعاية شاملة"},
+        {"name_en": "Pain-free procedure", "name_ar": "إجراء خالي من الألم"},
+        {"name_en": "Excellent results", "name_ar": "نتائج ممتازة"},
+        {"name_en": "Great value", "name_ar": "قيمة رائعة"},
+        {"name_en": "Follow-up care", "name_ar": "رعاية المتابعة"}
     ],
     "welcome_messages": {
         "Morpheus": "Hi {name}! We hope your Morpheus treatment was comfortable and you're happy with the results.",
@@ -133,4 +181,4 @@ CLINIC_DATA = {
         "Subcision": "Hi {name}! We hope your Subcision treatment went smoothly and you're pleased with the improvement in skin texture.",
         "Other": "Hi {name}! Thank you for visiting our clinic. We hope you received excellent care and attention."
     }
-} 
+}

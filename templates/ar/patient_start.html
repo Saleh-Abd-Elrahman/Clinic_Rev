@@ -1,0 +1,1116 @@
+{% extends "ar/base.html" %}
+
+{% block title %}استقبال المريض ✨{% endblock %}
+{% block body_class %}patient-survey-page{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Override base styles for this specific page */
+body {
+    margin: 0;
+    padding: 2rem 0 0 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    height: 100vh;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+    transition: background 0.4s ease;
+    color: var(--text);
+}
+
+/* New modern design styles */
+:root {
+    --bg: #FFF7F4;
+    --card-bg: rgba(255, 255, 255, 0.65);
+    --text: #7D635C;
+    --title: #B85D79;
+    --accent1: #B85D79;
+    --accent2: #992E4F;
+    --input-bg: #F8F6F3;
+    --glow: #F6EBE7;
+}
+
+html.dark {
+    --bg: #2e2e2e;
+    --card-bg: rgba(30, 30, 30, 0.7);
+    --text: #F4EFE9;
+    --title: #DBB3A9;
+    --accent1: #992E4F;
+    --accent2: #B85D79;
+    --input-bg: #3a3a3a;
+    --glow: #7D635C;
+}
+
+.toggle-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 10;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input { display: none; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent1);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--glow), transparent 70%);
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 6s ease-in-out infinite;
+    filter: blur(60px);
+}
+
+.float-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.25;
+    animation: float 20s infinite ease-in-out;
+    filter: blur(30px);
+}
+
+.pink {
+    width: 250px;
+    height: 250px;
+    background: #ECD9D2;
+    top: 20%;
+    left: 10%;
+}
+
+.wine {
+    width: 300px;
+    height: 300px;
+    background: #992E4F;
+    bottom: 15%;
+    right: 10%;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.7; }
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-30px); }
+    100% { transform: translateY(0); }
+}
+
+.container {
+    text-align: center;
+    backdrop-filter: blur(12px);
+    background: var(--card-bg);
+    padding: 1.5rem 2rem;
+    border-radius: 24px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 1.2s ease;
+    transition: background 0.4s ease;
+    max-width: 600px;
+    width: 90%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+    font-size: 2.6rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.title-color {
+    color: var(--title);
+}
+
+.inspirational-text {
+    color: var(--accent1);
+    font-size: 1.1rem;
+    font-style: italic;
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+    opacity: 0.95;
+    
+    /* Glassy futuristic styling */
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.25) 0%, 
+        rgba(255, 255, 255, 0.15) 50%, 
+        rgba(255, 255, 255, 0.1) 100%);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    padding: 1rem 1.5rem;
+    box-shadow: 
+        0 8px 32px rgba(184, 93, 121, 0.15),
+        0 4px 16px rgba(184, 93, 121, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    
+    /* Futuristic glow effect */
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    
+    /* Subtle animation */
+    animation: gentleGlow 4s ease-in-out infinite alternate;
+}
+
+.inspirational-text::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        rgba(184, 93, 121, 0.3) 0%, 
+        rgba(153, 46, 79, 0.2) 50%, 
+        rgba(184, 93, 121, 0.3) 100%);
+    border-radius: 18px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.inspirational-text:hover::before {
+    opacity: 1;
+}
+
+.inspirational-text:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 12px 40px rgba(184, 93, 121, 0.2),
+        0 6px 20px rgba(184, 93, 121, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Dark mode styling for inspirational text */
+html.dark .inspirational-text {
+    color: var(--title);
+}
+
+@keyframes gentleGlow {
+    0% {
+        box-shadow: 
+            0 8px 32px rgba(184, 93, 121, 0.15),
+            0 4px 16px rgba(184, 93, 121, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    100% {
+        box-shadow: 
+            0 8px 32px rgba(184, 93, 121, 0.2),
+            0 4px 16px rgba(184, 93, 121, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+}
+
+.subtitle {
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.login-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+label {
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: right;
+}
+
+input[type="text"], select {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    background: var(--input-bg);
+    font-size: 1rem;
+    color: var(--text);
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    direction: rtl;
+    text-align: right;
+}
+
+input[type="text"]::placeholder {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Procedure checkboxes styling */
+.procedure-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    background: var(--input-bg);
+    padding: 0.4rem;
+    transition: all 0.3s ease;
+    direction: rtl;
+    text-align: right;
+}
+
+.procedure-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    direction: rtl;
+    text-align: right;
+}
+
+.procedure-checkbox:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.procedure-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    width: 100%;
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+.procedure-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--accent1);
+}
+
+.procedure-checkbox .checkmark {
+    flex: 1;
+}
+
+.procedure-loading, .no-procedures, .error {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text);
+    font-style: italic;
+}
+
+.error {
+    color: #d32f2f;
+}
+
+/* Selected procedures display */
+.selected-procedures-display {
+    margin-top: 0.5rem;
+    padding: 0.7rem;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    direction: rtl;
+    text-align: right;
+}
+
+.selected-procedures-display h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--title);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+.selected-procedures-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.selected-procedure-tag {
+    display: inline-block;
+    background: rgba(170, 65, 97, 0.7);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.selected-procedure-tag:hover {
+    background: rgba(184, 93, 121, 0.8);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+input:focus, select:focus {
+    border-color: var(--accent1);
+    box-shadow: 0 0 0 3px #ffe0ef80;
+}
+
+.option-group {
+    display: flex;
+    justify-content: center;
+    gap: 0.7rem;
+    margin-bottom: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.option-pill {
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #ccc;
+}
+
+.option-pill:hover {
+    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.option-pill input {
+    display: none;
+}
+
+.emoji-group {
+    direction: ltr;
+}
+
+.emoji-group label {
+    font-size: 1.8rem;
+}
+
+.language-selector {
+    display: flex;
+    gap: 0;
+    justify-content: center;
+    position: relative;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 4px;
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.language-selector::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 2px 10px rgba(184, 93, 121, 0.3);
+    z-index: 1;
+}
+
+.language-selector input {
+    display: none;
+}
+
+.language-selector label {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border: none;
+    font-weight: 500;
+    min-width: 80px;
+    text-align: center;
+    color: var(--text);
+    z-index: 2;
+    flex: 1;
+}
+
+.language-selector label:hover {
+    transform: translateY(-0.5px) scale(1.02);
+}
+
+.language-selector input:checked + label {
+    color: white;
+    font-weight: 600;
+}
+
+/* Slide the indicator to the right for Arabic (second option) */
+.language-selector input:nth-child(4):checked ~ .language-selector::before,
+.language-selector input[id="lang-ar"]:checked ~ .language-selector::before {
+    transform: translateX(100%);
+}
+
+/* For English pages, slide for Arabic option */
+.language-selector input[id="lang-ar"]:checked ~ .language-selector::before {
+    transform: translateX(100%);
+}
+
+/* Move the indicator with JavaScript for dynamic handling */
+.language-selector.slide-right::before {
+    transform: translateX(100%);
+}
+
+button {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border: none;
+    color: white;
+    padding: 0.9rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+button:hover {
+    transform: scale(1.03);
+}
+
+/* Auto-selected styling */
+.auto-selected {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 2px solid var(--accent1) !important;
+    border-radius: 12px !important;
+    padding: 0.6rem 0.8rem !important;
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+    min-height: 44px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    margin-bottom: 5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.auto-selected::before {
+    content: "✓" !important;
+    color: white !important;
+    font-weight: bold !important;
+    margin-left: 12px !important;
+    background: var(--accent1) !important;
+    border-radius: 50% !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.9rem !important;
+    flex-shrink: 0 !important;
+}
+
+.auto-selected-text {
+    font-weight: 500 !important;
+    color: var(--text) !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+    text-align: right !important;
+}
+
+/* Message toggle button */
+.toggle-btn {
+    background: rgba(255, 255, 255, 0.4) !important;
+    color: var(--text) !important;
+    padding: 0.6rem 1.2rem !important;
+    border: 1px solid #ccc !important;
+    border-radius: 999px !important;
+    cursor: pointer !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    margin-bottom: 0.7rem !important;
+    display: inline-block !important;
+    text-decoration: none !important;
+    line-height: 1.5 !important;
+    min-height: 44px !important;
+    min-width: 120px !important;
+    touch-action: manipulation !important;
+}
+
+.toggle-btn:hover, .toggle-btn:active {
+    background: rgba(255, 255, 255, 0.7) !important;
+    transform: scale(1.05) !important;
+}
+
+/* Navigation */
+.navigation {
+    margin-top: 1rem;
+}
+
+.back-btn {
+    background: var(--accent2);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.back-btn:hover {
+    background: #7d2a40;
+    transform: scale(1.03);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1.2rem;
+        width: 95%;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .option-group {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .language-selector {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .procedure-checkboxes {
+        max-height: 120px;
+    }
+    
+    .selected-procedures-display {
+        padding: 0.6rem;
+    }
+    
+    .selected-procedure-tag {
+        font-size: 0.8rem;
+        padding: 0.2rem 0.6rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="background">
+    <div class="glow"></div>
+    <div class="float-circle pink"></div>
+    <div class="float-circle wine"></div>
+</div>
+
+<div class="toggle-wrapper">
+    <label class="switch">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider"></span>
+    </label>
+</div>
+
+<div class="content-wrapper" id="main-content">
+    <h1 class="title-color">استقبال المريض 🌸</h1>
+    <p class="inspirational-text">🫵🏻🦋✨استمري، فقوتك نصف جمالك✨🦋🫵🏻</p>
+    <p class="subtitle">قم بتعبئة بيانات المريض لتحضير المراجعة</p>
+
+<form method="post" action="/patient-details" id="patient-form" 
+      data-auto-doctor-id="{% if auto_select_doctor and not auto_select_procedure %}{{ auto_doctor.id }}{% endif %}"
+      data-saved-doctor-id="{{ form_state.doctor_id or '' }}"
+      data-saved-procedure-ids="{{ form_state.procedure_ids|join(',') if form_state.procedure_ids else '' }}">
+    
+    <div class="login-box">
+        <label for="patient-name">اسم المريض</label>
+        <input type="text" id="patient-name" name="patient_name" placeholder="أدخل الاسم الكامل" 
+               value="{{ form_state.patient_name or '' }}" required />
+        
+        <label for="doctor-select">اختر الطبيب:</label>
+        {% if auto_select_doctor %}
+            <div class="auto-selected">
+                <span class="auto-selected-text">{{ auto_doctor.name_ar }}</span>
+                <input type="hidden" id="doctor-select" name="doctor_id" value="{{ auto_doctor.id }}" required>
+            </div>
+        {% else %}
+            <select id="doctor-select" name="doctor_id" required>
+                <option value="">اختر طبيبك</option>
+                {% for doctor in doctors %}
+                <option value="{{ doctor.id }}" 
+                        {% if form_state.doctor_id and form_state.doctor_id|string == doctor.id|string %}selected{% endif %}>
+                    {{ doctor.name_ar }}
+                </option>
+                {% endfor %}
+            </select>
+        {% endif %}
+        
+        <label for="procedure-select">اختر الإجراءات (يمكن اختيار أكثر من إجراء):</label>
+        {% if auto_select_procedure %}
+            <div class="auto-selected">
+                <span class="auto-selected-text">{{ auto_procedure.name_ar }}</span>
+                <input type="hidden" name="procedure_ids" value="{{ auto_procedure.id }}">
+            </div>
+        {% else %}
+            <div id="procedure-checkboxes" class="procedure-checkboxes">
+                <div class="procedure-loading">{% if auto_select_doctor %}جاري تحميل الإجراءات...{% else %}اختر الطبيب أولاً{% endif %}</div>
+            </div>
+        {% endif %}
+        
+        <div class="selected-procedures-display" id="selected-procedures-display" style="display: none;">
+            <div id="selected-procedures-list"></div>
+        </div>
+        
+        <label>حالة المريض</label>
+        <div class="option-group">
+            <label class="option-pill">
+                <input type="radio" name="status" value="new" 
+                       {% if not form_state.status or form_state.status == 'new' %}checked{% endif %} />
+                جديد
+            </label>
+            <label class="option-pill">
+                <input type="radio" name="status" value="returning" 
+                       {% if form_state.status == 'returning' %}checked{% endif %} />
+                عائد
+            </label>
+        </div>
+        
+        <label>المزاج</label>
+        <div class="option-group emoji-group">
+            <label class="emoji-pill">😊<input type="radio" name="mood" value="happy" 
+                   {% if form_state.mood == 'happy' %}checked{% endif %} /></label>
+            <label class="emoji-pill">😐<input type="radio" name="mood" value="neutral" 
+                   {% if form_state.mood == 'neutral' %}checked{% endif %} /></label>
+            <label class="emoji-pill">😞<input type="radio" name="mood" value="sad" 
+                   {% if form_state.mood == 'sad' %}checked{% endif %} /></label>
+        </div>
+        
+        <label>اللغة المفضلة</label>
+        <div class="language-selector">
+            <input type="radio" id="lang-ar" name="language" value="Arabic" checked />
+            <label for="lang-ar">العربية</label>
+            <input type="radio" id="lang-en" name="language" value="English" />
+            <label for="lang-en">English</label>
+        </div>
+        
+        <button type="submit" id="submit-btn">
+            <span id="submit-btn-text">متابعة</span>
+        </button>
+    </div>
+</form>
+
+    <div class="navigation">
+        <a href="/main-selection" class="back-btn">← العودة للقائمة الرئيسية</a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorSelect = document.getElementById('doctor-select');
+    const procedureCheckboxes = document.getElementById('procedure-checkboxes');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitBtnText = document.getElementById('submit-btn-text');
+    
+    // Language reset logic - only reset to English on first visit, not on reload
+    function handleLanguageReset() {
+        const savedLanguage = localStorage.getItem('language');
+        const isPageReload = sessionStorage.getItem('pageReloaded');
+        
+        if (!isPageReload && !savedLanguage) {
+            // First visit - redirect to English
+            sessionStorage.setItem('pageReloaded', 'true');
+            
+            // Collect current form state
+            const formState = collectFormState();
+            
+            // Submit form data to change language
+            const formData = new FormData();
+            formData.append('language', 'English');
+            
+            // Add all form state to the request
+            Object.keys(formState).forEach(key => {
+                if (Array.isArray(formState[key])) {
+                    formState[key].forEach(value => {
+                        formData.append(key, value);
+                    });
+                } else {
+                    formData.append(key, formState[key]);
+                }
+            });
+            
+            fetch('/change-language', {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                window.location.reload();
+            });
+            return;
+        }
+        
+        // Mark page as reloaded for subsequent visits
+        sessionStorage.setItem('pageReloaded', 'true');
+    }
+    
+    // Call language reset logic
+    handleLanguageReset();
+    
+    // Dynamic button text based on patient status
+    function updateSubmitButtonText() {
+        const selectedStatus = document.querySelector('input[name="status"]:checked');
+        if (selectedStatus) {
+            const isNew = selectedStatus.value === 'new';
+            submitBtnText.textContent = isNew ? 'أهلاً وسهلاً!' : 'أهلاً بعودتك!';
+        } else {
+            submitBtnText.textContent = 'متابعة';
+        }
+    }
+    
+    // Add event listeners to status radio buttons
+    const statusInputs = document.querySelectorAll('input[name="status"]');
+    statusInputs.forEach(input => {
+        input.addEventListener('change', updateSubmitButtonText);
+    });
+    
+    // Initialize button text
+    updateSubmitButtonText();
+    
+    // Function to load procedures for a doctor
+    async function loadProcedures(doctorId, language = 'ar', selectedProcedureNames = []) {
+        if (!doctorId) {
+            procedureCheckboxes.innerHTML = '<div class="procedure-loading">اختر الطبيب أولاً</div>';
+            return Promise.resolve();
+        }
+        
+        console.log('Loading procedures for doctor:', doctorId, 'language:', language);
+        
+        // Clear procedure options
+        procedureCheckboxes.innerHTML = '<div class="procedure-loading">جاري التحميل...</div>';
+        
+        try {
+            const response = await fetch(`/api/doctors/${doctorId}/procedures?language=${language}`);
+            const procedures = await response.json();
+            
+            console.log('Loaded procedures:', procedures);
+            
+            // Clear and populate procedure checkboxes
+            procedureCheckboxes.innerHTML = '';
+            if (procedures.length === 0) {
+                procedureCheckboxes.innerHTML = '<div class="no-procedures">لا توجد إجراءات متاحة لهذا الطبيب</div>';
+                return Promise.resolve();
+            }
+            
+            procedures.forEach(procedure => {
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'procedure-checkbox';
+                checkboxDiv.innerHTML = `
+                    <label>
+                        <input type="checkbox" name="procedure_ids" value="${procedure.id}" data-procedure-name="${procedure.name}">
+                        <span class="checkmark">${procedure.name}</span>
+                    </label>
+                `;
+                procedureCheckboxes.appendChild(checkboxDiv);
+                
+                // Add event listener to update selected procedures display
+                const checkbox = checkboxDiv.querySelector('input[type="checkbox"]');
+                checkbox.addEventListener('change', updateSelectedProceduresDisplay);
+            });
+            
+            // Restore selected procedures if any were provided
+            if (selectedProcedureNames.length > 0) {
+                restoreSelectedProcedures(selectedProcedureNames);
+            }
+            
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Error fetching procedures:', error);
+            procedureCheckboxes.innerHTML = '<div class="error">خطأ في تحميل الإجراءات</div>';
+            return Promise.reject(error);
+        }
+    }
+    
+    // Function to restore procedure selections by IDs
+    function restoreProcedureSelections(procedureIds) {
+        if (!procedureIds || procedureIds.length === 0) return;
+        
+        console.log('Restoring procedure selections:', procedureIds);
+        const checkboxes = document.querySelectorAll('input[name="procedure_ids"]');
+        let restoredCount = 0;
+        
+        checkboxes.forEach(checkbox => {
+            if (procedureIds.includes(checkbox.value)) {
+                checkbox.checked = true;
+                restoredCount++;
+            }
+        });
+        
+        console.log('Restored', restoredCount, 'procedure selections');
+        updateSelectedProceduresDisplay();
+    }
+    
+    // Function to update selected procedures display
+    function updateSelectedProceduresDisplay() {
+        const selectedProceduresDisplay = document.getElementById('selected-procedures-display');
+        const selectedProceduresList = document.getElementById('selected-procedures-list');
+        const selectedCheckboxes = document.querySelectorAll('input[name="procedure_ids"]:checked');
+        
+        console.log('Updating selected procedures display. Selected:', selectedCheckboxes.length);
+        
+        if (selectedCheckboxes.length === 0) {
+            selectedProceduresDisplay.style.display = 'none';
+            return;
+        }
+        
+        selectedProceduresDisplay.style.display = 'block';
+        selectedProceduresList.innerHTML = '';
+        
+        selectedCheckboxes.forEach(checkbox => {
+            const procedureName = checkbox.getAttribute('data-procedure-name');
+            console.log('Adding procedure to display:', procedureName);
+            const tag = document.createElement('span');
+            tag.className = 'selected-procedure-tag';
+            tag.textContent = procedureName;
+            selectedProceduresList.appendChild(tag);
+        });
+    }
+    
+    // Function to get current selected language
+    function getCurrentLanguage() {
+        const selectedLanguage = document.querySelector('input[name="language"]:checked');
+        return selectedLanguage ? (selectedLanguage.value === 'Arabic' ? 'ar' : 'en') : 'ar';
+    }
+    
+    // Function to collect all current form state
+    function collectFormState() {
+        const formState = {};
+        
+        // Patient name
+        const patientName = document.getElementById('patient-name');
+        if (patientName) {
+            formState.patient_name = patientName.value;
+        }
+        
+        // Doctor selection
+        const doctorSelect = document.getElementById('doctor-select');
+        if (doctorSelect) {
+            formState.doctor_id = doctorSelect.value;
+        }
+        
+        // Selected procedures
+        const selectedProcedures = document.querySelectorAll('input[name="procedure_ids"]:checked');
+        if (selectedProcedures.length > 0) {
+            formState.procedure_ids = Array.from(selectedProcedures).map(cb => cb.value);
+        }
+        
+        // Patient status
+        const selectedStatus = document.querySelector('input[name="status"]:checked');
+        if (selectedStatus) {
+            formState.status = selectedStatus.value;
+        }
+        
+        // Mood
+        const selectedMood = document.querySelector('input[name="mood"]:checked');
+        if (selectedMood) {
+            formState.mood = selectedMood.value;
+        }
+        
+        return formState;
+    }
+    
+    // Function to update sliding indicator position
+    function updateSlideIndicator() {
+        const languageSelector = document.querySelector('.language-selector');
+        const arabicRadio = document.getElementById('lang-ar');
+        
+        if (arabicRadio && arabicRadio.checked) {
+            languageSelector.classList.add('slide-right');
+        } else {
+            languageSelector.classList.remove('slide-right');
+        }
+    }
+    
+    // Initialize sliding indicator position
+    updateSlideIndicator();
+    
+    // Simple language change function
+    function changeLanguage(newLanguage) {
+        // Collect current form state
+        const formState = collectFormState();
+        
+        // Submit language change to server with form state
+        const formData = new FormData();
+        formData.append('language', newLanguage);
+        
+        // Add all form state to the request
+        Object.keys(formState).forEach(key => {
+            if (Array.isArray(formState[key])) {
+                formState[key].forEach(value => {
+                    formData.append(key, value);
+                });
+            } else {
+                formData.append(key, formState[key]);
+            }
+        });
+        
+        // Submit and reload - server will handle form state preservation
+        fetch('/change-language', {
+            method: 'POST',
+            body: formData
+        }).then(() => {
+            window.location.reload();
+        });
+    }
+    
+    // Add language change event listeners
+    const languageInputs = document.querySelectorAll('input[name="language"]');
+    languageInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Update sliding indicator immediately
+            updateSlideIndicator();
+            
+            // Change language
+            changeLanguage(this.value);
+        });
+    });
+    
+    // Update procedures when doctor is selected (only if doctor select is a dropdown)
+    if (doctorSelect && doctorSelect.tagName === 'SELECT') {
+        doctorSelect.addEventListener('change', function() {
+            const language = getCurrentLanguage();
+            loadProcedures(this.value, language);
+        });
+    }
+    
+    // Auto-load procedures if doctor is auto-selected or if there's a saved doctor selection
+    const patientForm = document.getElementById('patient-form');
+    const autoDoctorId = patientForm.getAttribute('data-auto-doctor-id');
+    const savedDoctorId = patientForm.getAttribute('data-saved-doctor-id');
+    const savedProcedureIdsStr = patientForm.getAttribute('data-saved-procedure-ids');
+    const savedProcedureIds = savedProcedureIdsStr ? savedProcedureIdsStr.split(',').filter(id => id.trim()) : [];
+    
+    if (autoDoctorId) {
+        const language = getCurrentLanguage();
+        loadProcedures(autoDoctorId, language);
+    } else if (savedDoctorId && doctorSelect && doctorSelect.tagName === 'SELECT') {
+        // If we have a saved doctor selection, load procedures for that doctor
+        const language = getCurrentLanguage();
+        loadProcedures(savedDoctorId, language).then(() => {
+            // After procedures are loaded, restore saved procedure selections
+            restoreProcedureSelections(savedProcedureIds);
+        });
+    }
+    
+    // If we have saved procedures but no saved doctor (shouldn't happen, but just in case)
+    // or if we need to update procedure names after language switch
+    const currentDoctorId = doctorSelect ? doctorSelect.value : null;
+    if (savedProcedureIds.length > 0 && currentDoctorId && !autoDoctorId) {
+        const language = getCurrentLanguage();
+        loadProcedures(currentDoctorId, language).then(() => {
+            restoreProcedureSelections(savedProcedureIds);
+        });
+    }
+    
+    // Handle auto-selected procedure display
+    const autoSelectedProcedure = document.querySelector('input[type="hidden"][name="procedure_ids"]');
+    if (autoSelectedProcedure) {
+        // For auto-selected procedures, show them in the display
+        const selectedProceduresDisplay = document.getElementById('selected-procedures-display');
+        const selectedProceduresList = document.getElementById('selected-procedures-list');
+        
+        // Get the procedure name from the auto-selected text
+        const autoSelectedText = document.querySelector('.auto-selected-text');
+        if (autoSelectedText) {
+            selectedProceduresDisplay.style.display = 'block';
+            const tag = document.createElement('span');
+            tag.className = 'selected-procedure-tag';
+            tag.textContent = autoSelectedText.textContent;
+            selectedProceduresList.appendChild(tag);
+        }
+    }
+    
+    // Form validation
+    document.getElementById('patient-form').addEventListener('submit', function(e) {
+        const patientName = document.getElementById('patient-name').value.trim();
+        const doctorId = document.getElementById('doctor-select').value;
+        const selectedProcedures = document.querySelectorAll('input[name="procedure_ids"]:checked');
+        
+        if (!patientName || !doctorId || selectedProcedures.length === 0) {
+            e.preventDefault();
+            alert('الرجاء ملء جميع الحقول المطلوبة واختيار إجراء واحد على الأقل.');
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -68,8 +68,8 @@
                     
                     <div class="review-details">
                         <div class="review-info">
-                            <p><strong>Doctor:</strong> {{ review.doctor.name if review.doctor else 'Unknown' }}</p>
-                            <p><strong>Procedure:</strong> {{ review.procedure.name if review.procedure else 'Unknown' }}</p>
+                                            <p><strong>Doctor:</strong> {{ review.doctor.name_en if review.doctor else 'Unknown' }}</p>
+                <p><strong>Procedure:</strong> {{ review.procedure.name_en if review.procedure else 'Unknown' }}</p>
                         </div>
                         
                         {% if review.feedback %}

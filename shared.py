@@ -8,7 +8,6 @@ def render_lang(request, template_name, context=None):
     
     # Templates that should always be in English (admin/coordinator interfaces)
     english_only_templates = [
-        "patient_start.html",
         "admin_doctors.html", 
         "admin_reviews.html",
         "admin_survey.html",

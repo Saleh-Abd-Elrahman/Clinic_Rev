@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Manage Doctors & Procedures 🎀</title>
+    <title>Manage Doctors & Procedures</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script defer src="/static/theme.js"></script>
 </head>
@@ -20,71 +20,116 @@
         </label>
     </div>
     
-    <div class="admin-container">
-        <div class="admin-header">
+    <div class="admin-container compact">
+        <div class="admin-header compact">
             <div>
-                <h1 class="admin-title">👨‍⚕️ Manage Doctors & Procedures</h1>
-                <p class="admin-subtitle">Click on a doctor to see their assigned procedures</p>
+                <h1 class="admin-title">Doctors & Procedures</h1>
+                <p class="admin-subtitle">Manage your healthcare providers</p>
             </div>
             <div class="header-actions">
-                <button onclick="window.location.href='/admin'" class="back-button">← Back to Dashboard</button>
+                <button onclick="window.location.href='/admin'" class="back-button">← Back</button>
                 <form action="/logout" method="POST" style="display: inline;">
-                    <button type="submit" class="logout-button">🚪 Logout</button>
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Compact Stats -->
+        <div class="stats-grid compact">
+            <div class="stat-card compact">
+                <span class="stat-label">Doctors</span>
+                <span class="stat-number">{{ doctors|length }}</span>
+            </div>
+            <div class="stat-card compact">
+                <span class="stat-label">Procedures</span>
+                <span class="stat-number">{{ all_procedures|length }}</span>
+            </div>
+            <div class="stat-card compact">
+                <span class="stat-label">Assignments</span>
+                <span class="stat-number">{{ doctors|map(attribute='procedures')|map('length')|sum }}</span>
+            </div>
+        </div>
+        
+        <!-- Compact Forms -->
+        <div class="forms-grid">
+            <div class="form-section compact">
+                <h3>Add Doctor</h3>
+                <form action="/add_doctor" method="POST" class="add-form compact">
+                    <div class="form-row compact">
+                        <input type="text" name="name_en" placeholder="English name" required>
+                        <input type="text" name="name_ar" placeholder="Arabic name" required>
+                    </div>
+                    <button type="submit">Add</button>
+                </form>
+            </div>
+            
+            <div class="form-section compact">
+                <h3>Add Procedure</h3>
+                <form action="/add_procedure" method="POST" class="add-form compact">
+                    <div class="form-row compact">
+                        <input type="text" name="name_en" placeholder="English name" required>
+                        <input type="text" name="name_ar" placeholder="Arabic name" required>
+                    </div>
+                    <button type="submit">Add</button>
                 </form>
             </div>
         </div>
         
-        <!-- Add Doctor Form -->
-        <div class="form-section">
-            <h3>Add New Doctor</h3>
-            <form action="/add_doctor" method="POST" class="add-form">
-                <input type="text" name="name" placeholder="Doctor name" required>
-                <button type="submit">Add Doctor</button>
-            </form>
-        </div>
-        
-        <!-- Add Procedure Form -->
-        <div class="form-section">
-            <h3>Add New Procedure</h3>
-            <form action="/add_procedure" method="POST" class="add-form">
-                <input type="text" name="name" placeholder="Procedure name" required>
-                <textarea name="description" placeholder="Procedure description (optional)"></textarea>
-                <button type="submit">Add Procedure</button>
-            </form>
-        </div>
-        
-        <!-- Doctors List -->
-        <div class="doctors-section">
-            <h3>Doctors & Their Procedures</h3>
-            <div class="doctors-list">
+        <!-- Compact Hierarchy -->
+        <div class="doctors-section compact">
+            <div class="section-header compact">
+                <h3>Healthcare Providers</h3>
+                <div class="section-actions">
+                    <button onclick="expandAll()" class="expand-btn">Expand All</button>
+                    <button onclick="collapseAll()" class="collapse-btn">Collapse All</button>
+                </div>
+            </div>
+            
+            <div class="doctors-list compact">
                 {% for doctor in doctors %}
-                <div class="doctor-card">
-                    <div class="doctor-header" onclick="toggleProcedures('{{ doctor.id }}')">
-                        <h4>{{ doctor.name }}</h4>
-                        <span class="toggle-icon" id="toggle-{{ doctor.id }}">▼</span>
+                <div class="doctor-card compact" data-doctor-id="{{ doctor.id }}">
+                    <div class="doctor-header compact" onclick="toggleProcedures('{{ doctor.id }}')">
+                        <div class="doctor-info compact">
+                            <div class="doctor-names compact">
+                                <span class="name-en">{{ doctor.name_en or "N/A" }}</span>
+                                <span class="name-ar">{{ doctor.name_ar or "غير محدد" }}</span>
+                            </div>
+                            <div class="doctor-stats compact">
+                                <span class="procedure-count">{{ doctor.procedures|length }} procedures</span>
+                            </div>
+                        </div>
+                        <div class="toggle-controls compact">
+                            <span class="toggle-icon" id="toggle-{{ doctor.id }}">▼</span>
+                        </div>
                     </div>
-                    <div class="procedures-list" id="procedures-{{ doctor.id }}" style="display: none;">
+                    
+                    <div class="procedures-list compact scrollable" id="procedures-{{ doctor.id }}" style="display: none;">
                         {% if doctor.procedures %}
                             {% for procedure in doctor.procedures %}
-                            <div class="procedure-item">
-                                <span>{{ procedure.name }}</span>
-                                <form action="/remove_doctor_procedure/{{ doctor.id }}/{{ procedure.id }}" method="POST" style="display: inline;">
-                                    <button type="submit" class="remove-btn">Remove</button>
+                            <div class="procedure-item compact">
+                                <div class="procedure-content compact">
+                                    <div class="procedure-names compact">
+                                        <span class="name-en">{{ procedure.name_en or "N/A" }}</span>
+                                        <span class="name-ar">{{ procedure.name_ar or "غير محدد" }}</span>
+                                    </div>
+                                </div>
+                                <form action="/remove_doctor_procedure/{{ doctor.id }}/{{ procedure.id }}" method="POST">
+                                    <button type="submit" class="remove-btn compact">Remove</button>
                                 </form>
                             </div>
                             {% endfor %}
                         {% else %}
-                            <p class="no-procedures">No procedures assigned</p>
+                            <p class="no-procedures compact">No procedures assigned</p>
                         {% endif %}
                         
-                        <!-- Assign Procedure Form -->
-                        <div class="assign-procedure-form">
+                        <!-- Compact Assign Form -->
+                        <div class="assign-procedure-form compact">
                             <form action="/add_doctor_procedure/{{ doctor.id }}" method="POST">
                                 <select name="procedure_id" required>
-                                    <option value="">Select procedure to assign...</option>
+                                    <option value="">Select procedure...</option>
                                     {% for procedure in all_procedures %}
                                         {% if procedure not in doctor.procedures %}
-                                        <option value="{{ procedure.id }}">{{ procedure.name }}</option>
+                                        <option value="{{ procedure.id }}">{{ procedure.name_en }} | {{ procedure.name_ar or "غير محدد" }}</option>
                                         {% endif %}
                                     {% endfor %}
                                 </select>
@@ -92,38 +137,15 @@
                             </form>
                         </div>
                     </div>
-                    <div class="doctor-actions">
-                        <form action="/delete_doctor/{{ doctor.id }}" method="POST" style="display: inline;">
-                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this doctor?')">Delete Doctor</button>
+                    
+                    <div class="doctor-actions compact">
+                        <form action="/delete_doctor/{{ doctor.id }}" method="POST">
+                            <button type="submit" class="delete-btn compact" onclick="return confirm('Delete this doctor?')">Delete</button>
                         </form>
                     </div>
                 </div>
                 {% else %}
-                <p>No doctors found. Add a doctor to get started.</p>
-                {% endfor %}
-            </div>
-        </div>
-        
-        <!-- Available Procedures -->
-        <div class="procedures-section">
-            <h3>Available Procedures</h3>
-            <div class="procedures-list">
-                {% for procedure in all_procedures %}
-                <div class="procedure-card">
-                    <div class="procedure-info">
-                        <h4>{{ procedure.name }}</h4>
-                        {% if procedure.description %}
-                        <p>{{ procedure.description }}</p>
-                        {% endif %}
-                    </div>
-                    <div class="procedure-actions">
-                        <form action="/delete_procedure/{{ procedure.id }}" method="POST" style="display: inline;">
-                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this procedure?')">Delete</button>
-                        </form>
-                    </div>
-                </div>
-                {% else %}
-                <p>No procedures found. Add a procedure to get started.</p>
+                <p class="empty-state">No doctors found. Add a doctor to get started.</p>
                 {% endfor %}
             </div>
         </div>
@@ -133,14 +155,37 @@
         function toggleProcedures(doctorId) {
             const proceduresDiv = document.getElementById('procedures-' + doctorId);
             const toggleIcon = document.getElementById('toggle-' + doctorId);
+            const doctorCard = document.querySelector(`[data-doctor-id="${doctorId}"]`);
             
             if (proceduresDiv.style.display === 'none') {
                 proceduresDiv.style.display = 'block';
                 toggleIcon.textContent = '▲';
+                doctorCard.classList.add('expanded');
             } else {
                 proceduresDiv.style.display = 'none';
                 toggleIcon.textContent = '▼';
+                doctorCard.classList.remove('expanded');
             }
+        }
+        
+        function expandAll() {
+            const allProcedures = document.querySelectorAll('.procedures-list');
+            const allToggleIcons = document.querySelectorAll('.toggle-icon');
+            const allDoctorCards = document.querySelectorAll('.doctor-card');
+            
+            allProcedures.forEach(proc => proc.style.display = 'block');
+            allToggleIcons.forEach(icon => icon.textContent = '▲');
+            allDoctorCards.forEach(card => card.classList.add('expanded'));
+        }
+        
+        function collapseAll() {
+            const allProcedures = document.querySelectorAll('.procedures-list');
+            const allToggleIcons = document.querySelectorAll('.toggle-icon');
+            const allDoctorCards = document.querySelectorAll('.doctor-card');
+            
+            allProcedures.forEach(proc => proc.style.display = 'none');
+            allToggleIcons.forEach(icon => icon.textContent = '▼');
+            allDoctorCards.forEach(card => card.classList.remove('expanded'));
         }
     </script>
 </body>

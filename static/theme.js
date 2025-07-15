@@ -1,27 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.getElementById('themeToggle');
-    const body = document.body;
+    const htmlElement = document.documentElement;
     
-    // Check if toggle exists on this page
-    if (!toggle) {
-        console.log('Theme toggle not found on this page');
-        return;
-    }
-    
-    // Check for saved theme in localStorage and apply it
+    // Always check for saved theme and apply it on page load
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
-        body.classList.add('dark');
-        toggle.checked = true;
+        htmlElement.classList.add('dark');
+        // Set toggle to checked if it exists
+        if (toggle) {
+            toggle.checked = true;
+        }
+    } else {
+        // Ensure light theme is applied if no dark theme
+        htmlElement.classList.remove('dark');
+        if (toggle) {
+            toggle.checked = false;
+        }
     }
     
-    // Add toggle event listener
-    toggle.addEventListener('change', function() {
-        body.classList.toggle('dark');
-        if (body.classList.contains('dark')) {
-            localStorage.setItem('theme', 'dark');
-        } else {
-            localStorage.setItem('theme', 'light');
-        }
-    });
+    // Only add toggle event listener if toggle exists on this page
+    if (toggle) {
+        toggle.addEventListener('change', function() {
+            htmlElement.classList.toggle('dark');
+            if (htmlElement.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    }
 }); 
