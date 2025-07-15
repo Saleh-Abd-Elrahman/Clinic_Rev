@@ -270,7 +270,7 @@ async def patient_details(
     
     # Generate a kind, general welcome message that handles multiple procedures
     if len(procedure_names) == 1:
-        welcome_text = f"Thank you for choosing our clinic for your {procedure_names[0]} treatment. We're delighted to have you with us today and hope you had a comfortable experience."
+        welcome_text = f"Thank you for choosing our clinic for your treatment. We're delighted to have you with us today and hope you had a comfortable experience."
     else:
         # For multiple procedures, create a more elegant message
         if len(procedure_names) == 2:
