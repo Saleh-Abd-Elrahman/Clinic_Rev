@@ -13,6 +13,64 @@
   </label>
 </div>
 
+<style>
+.btn-primary {
+  background: linear-gradient(145deg, rgba(184, 93, 121, 0.3), rgba(153, 46, 79, 0.3));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  border-radius: 20px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 32px rgba(184, 93, 121, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 40px rgba(184, 93, 121, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(145deg, rgba(184, 93, 121, 0.4), rgba(153, 46, 79, 0.4));
+}
+
+.btn-primary:hover:before {
+  left: 100%;
+}
+
+.btn-primary:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 
+    0 4px 16px rgba(184, 93, 121, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:focus {
+  outline: none;
+  box-shadow: 
+    0 8px 32px rgba(184, 93, 121, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 0 0 3px rgba(184, 93, 121, 0.2);
+}
+</style>
+
 <h1 class="title-color">🌸 Welcome, {{ patient_name }}!</h1>
   
   <div class="glass-box">
@@ -21,21 +79,30 @@
       {{ welcome_message }}
     </p>
   </div>
-  <p class="subtext">We’d love your feedback to keep improving.</p>
+  <p class="subtext">Thank you for your precious time</p>
 
   <form method="get" action="/patient-survey" id="continue-form">
     <input type="hidden" name="session_data" value="{{ session_data|e }}">
     <button type="submit" class="btn-primary">Start Quick Feedback</button>
   </form>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('darkToggle').addEventListener('change', function() {
     document.body.classList.toggle('dark');
   });
 
-  // Store session
-  const data = {{ session_data|tojson|safe }};
-  sessionStorage.setItem("patientSessionData", JSON.stringify(data));
+  // Store session - fix JavaScript linter issues
+  try {
+    const sessionDataElement = document.querySelector('input[name="session_data"]');
+    if (sessionDataElement) {
+      const sessionDataValue = sessionDataElement.value;
+      const data = JSON.parse(sessionDataValue);
+      sessionStorage.setItem("patientSessionData", JSON.stringify(data));
+    }
+  } catch (error) {
+    console.log('Error parsing session data:', error);
+  }
 
   let timeout = setTimeout(() => {
     document.getElementById('continue-form').submit();
