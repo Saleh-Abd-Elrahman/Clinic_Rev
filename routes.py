@@ -268,18 +268,18 @@ async def patient_details(
     procedure_names = [proc.name for proc in procedures]
     procedure_names_str = ", ".join(procedure_names)
     
-    # Get welcome message for the first procedure (or create a general one)
-    welcome_msg = None
-    if procedures:
-        welcome_msg = db.query(WelcomeMessage).filter(WelcomeMessage.procedure_name == procedures[0].name).first()
-    
-    if welcome_msg:
-        welcome_text = welcome_msg.message.format(name=patient_name)
+    # Generate a kind, general welcome message that handles multiple procedures
+    if len(procedure_names) == 1:
+        welcome_text = f"Thank you for choosing our clinic for your {procedure_names[0]} treatment. We're delighted to have you with us today and hope you had a comfortable experience."
     else:
-        if len(procedure_names) == 1:
-            welcome_text = f"Hi {patient_name}! Thank you for visiting our clinic for your {procedure_names[0]} procedure."
+        # For multiple procedures, create a more elegant message
+        if len(procedure_names) == 2:
+            procedures_text = f"{procedure_names[0]} and {procedure_names[1]}"
         else:
-            welcome_text = f"Hi {patient_name}! Thank you for visiting our clinic for your {procedure_names_str} procedures."
+            # For 3+ procedures: "A, B, and C"
+            procedures_text = ", ".join(procedure_names[:-1]) + f", and {procedure_names[-1]}"
+        
+        welcome_text = f"Thank you for choosing our clinic for your {procedures_text} treatments. We're delighted to have you with us today and hope you had a comfortable experience with all your procedures."
     
     # Store session data for the survey
     session_data = {
@@ -295,6 +295,7 @@ async def patient_details(
         "lang_code": lang_code
     }
     return render_lang(request, "patient_welcome.html", {
+        "patient_name": patient_name,
         "welcome_message": welcome_text,
         "session_data": session_data
     })
