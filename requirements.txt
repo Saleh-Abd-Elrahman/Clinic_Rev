@@ -8,7 +8,7 @@ idna==3.10
 itsdangerous==2.1.2
 Jinja2==3.1.6
 MarkupSafe==3.0.2
-openai==1.52.0
+openai==1.96.1
 pillow==10.4.0
 pydantic==2.11.7
 PyPDF2==3.0.1
