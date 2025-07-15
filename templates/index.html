@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Coordinator Hub 🎀</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Dark Mode Toggle -->
+  <div class="toggle-wrapper">
+    <label class="switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- Background Elements -->
+  <div class="background">
+    <div class="glow"></div>
+    <div class="float-circle pink"></div>
+    <div class="float-circle wine"></div>
+  </div>
+
+  <!-- Login Form Container -->
+  <div class="container">
+    <h1><span class="title-color">Coordinator Hub</span> 🎀</h1>
+
+    {% if error %}
+      <p class="error-msg">{{ error }}</p>
+    {% endif %}
+
+    <form action="/login" method="POST" class="login-box">
+      <label for="password">Staff Login</label>
+      <input type="password" name="password" placeholder="Enter password" required />
+      <button type="submit">Login 🌸</button>
+    </form>
+  </div>
+
+  <script src="/static/theme.js"></script>
+</body>
+</html>

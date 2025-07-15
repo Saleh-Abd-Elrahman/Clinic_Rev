@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard 🎀</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="blur-glow pink-blur"></div>
+        <div class="blur-glow purple-blur"></div>
+    </div>
+    
+    <div class="toggle-wrapper">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">Admin Dashboard 🎀</h1>
+        </div>
+        
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">Total Reviews</span>
+                <span class="stat-number">{{ stats.total_reviews }}</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Average Rating</span>
+                <span class="stat-number">{{ "%.1f"|format(stats.average_rating) }} ★</span>
+            </div>
+        </div>
+        
+        <!-- Navigation Cards -->
+        <div class="admin-nav-grid">
+            <div class="admin-nav-card" onclick="window.location.href='/admin/doctors'">
+                <h2>👨‍⚕️ Manage Doctors & Procedures</h2>
+                <p>Add/remove doctors and assign procedures to them</p>
+            </div>
+            
+            <div class="admin-nav-card" onclick="window.location.href='/admin/survey'">
+                <h2>📝 Change Survey</h2>
+                <p>Manage review factors and welcome messages</p>
+            </div>
+            
+            <div class="admin-nav-card" onclick="window.location.href='/admin/reviews'">
+                <h2>⭐ Patient Reviews</h2>
+                <p>View all patient reviews and feedback</p>
+            </div>
+        </div>
+        
+        <!-- Back to Main Menu Section -->
+        <div class="logout-section">
+            <button onclick="window.location.href='/main-selection'" class="logout-button">← Back to Main Menu</button>
+        </div>
+    </div>
+</body>
+</html> 

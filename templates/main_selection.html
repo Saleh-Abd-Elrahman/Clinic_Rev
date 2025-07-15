@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Coordinator Hub 🎀</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="blur-glow pink-blur"></div>
+        <div class="blur-glow purple-blur"></div>
+    </div>
+    
+    <div class="toggle-wrapper">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="hub-container">
+        <h1 class="hub-title">Coordinator Hub 🎀</h1>
+        <p class="hub-subtitle">Please select an action below:</p>
+        
+        <div class="card-grid">
+            <form action="/patient-start" method="GET">
+                <button type="submit" class="hub-card">
+                    <h2>Patient Review 🌸 </h2>
+                    <p>Guide patients through a personalized AI-powered review process.</p>
+                </button>
+            </form>
+            
+            <form action="/admin" method="GET">
+                <button type="submit" class="hub-card">
+                    <h2>Admin Dashboard 🧞‍♀️</h2>
+                    <p>View insights, manage doctors & configure clinic experience.</p>
+                </button>
+            </form>
+        </div>
+        
+        <form action="/logout" method="POST">
+            <button type="submit" class="logout-button">🚪 Logout</button>
+        </form>
+    </div>
+</body>
+</html> 

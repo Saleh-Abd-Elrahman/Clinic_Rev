@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Change Survey 🎀</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script defer src="/static/theme.js"></script>
+</head>
+<body>
+    <div class="background">
+        <div class="blur-glow pink-blur"></div>
+        <div class="blur-glow purple-blur"></div>
+    </div>
+    
+    <div class="toggle-wrapper">
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+    
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1 class="admin-title">📝 Change Survey</h1>
+                <p class="admin-subtitle">Manage review factors and welcome messages</p>
+            </div>
+            <div class="header-actions">
+                <button onclick="window.location.href='/admin'" class="back-button">← Back to Dashboard</button>
+                <form action="/logout" method="POST" style="display: inline;">
+                    <button type="submit" class="logout-button">🚪 Logout</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Review Factors Section -->
+        <div class="survey-section">
+            <h3>Review Factors</h3>
+            <p class="section-description">These are the factors patients can select when leaving a review</p>
+            
+            <!-- Add Factor Form -->
+            <div class="form-section">
+                <form action="/add_factor" method="POST" class="add-form">
+                    <input type="text" name="name" placeholder="New factor name" required>
+                    <button type="submit">Add Factor</button>
+                </form>
+            </div>
+            
+            <!-- Factors List -->
+            <div class="factors-list">
+                {% for factor in factors %}
+                <div class="factor-card">
+                    <div class="factor-info">
+                        <h4>{{ factor.name }}</h4>
+                        {% if factor.description %}
+                        <p>{{ factor.description }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="factor-actions">
+                        <form action="/delete_factor/{{ factor.id }}" method="POST" style="display: inline;">
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this factor?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <p>No factors found. Add a factor to get started.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Welcome Messages Section -->
+        <div class="survey-section">
+            <h3>Welcome Messages</h3>
+            <p class="section-description">Personalized messages shown to patients based on their procedure</p>
+            
+            <!-- Add Welcome Message Form -->
+            <div class="form-section">
+                <form action="/add_welcome_message" method="POST" class="add-form">
+                    <select name="procedure_name" required>
+                        <option value="">Select procedure...</option>
+                        {% for procedure in procedures %}
+                        <option value="{{ procedure.name_en }}">{{ procedure.name_en }}</option>
+                        {% endfor %}
+                    </select>
+                    <textarea name="message" placeholder="Welcome message (use {name} for patient name)" required></textarea>
+                    <button type="submit">Add Welcome Message</button>
+                </form>
+            </div>
+            
+            <!-- Welcome Messages List -->
+            <div class="messages-list">
+                {% for message in welcome_messages %}
+                <div class="message-card">
+                    <div class="message-info">
+                        <h4>{{ message.procedure_name }}</h4>
+                        <p class="message-text">{{ message.message }}</p>
+                    </div>
+                    <div class="message-actions">
+                        <form action="/delete_welcome_message/{{ message.id }}" method="POST" style="display: inline;">
+                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this welcome message?')">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <p>No welcome messages found. Add a message to get started.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

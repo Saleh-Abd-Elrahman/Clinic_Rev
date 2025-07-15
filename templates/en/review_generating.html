@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block title %}Message to Doctor 🌸{% endblock %}
+{% block body_class %}review-generating-page{% endblock %}
+
+{% block content %}
+<div class="toggle-wrapper">
+    <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="slider"></span>
+    </label>
+</div>
+
+<div class="emotion-bg">
+    <div class="emotion-glow glow-1"></div>
+    <div class="emotion-glow glow-2"></div>
+</div>
+
+
+    <h1 class="title-color">A Moment Just for You 🌸 </h1>
+    <p class="compliment">Your confidence and grace inspire us. Share a few words with your doctor, they'll cherish it.</p>
+
+    <form method="post" action="/generate-reviews" id="message-form">
+        <!-- Hidden form fields from previous step -->
+        <input type="hidden" name="session_data" value="{{ form_data.session_data }}">
+        <input type="hidden" name="rating" value="{{ form_data.rating }}">
+        {% for factor in form_data.selected_factors %}
+        <input type="hidden" name="selected_factors" value="{{ factor }}">
+        {% endfor %}
+        <input type="hidden" name="additional_comments" value="{{ form_data.additional_comments }}">
+        {% for staff in form_data.selected_staff %}
+        <input type="hidden" name="selected_staff" value="{{ staff }}">
+        {% endfor %}
+        <input type="hidden" name="all_staff_selected" value="{{ form_data.all_staff_selected }}">
+        
+        <label for="message-to-doctor"> Your private note 💬</label>
+        <textarea 
+            id="message-to-doctor" 
+            name="message_to_doctor" 
+            placeholder="Let your doctor know how you feel..."
+        ></textarea>
+        <small>Only your doctor will see this. It stays private.</small>
+        
+        <!-- Selected procedures display -->
+        <div class="selected-procedures-display" id="selected-procedures-display">
+            <h4>Selected Procedures:</h4>
+            <div class="selected-procedures-list" id="selected-procedures-list">
+                <!-- Procedures will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button type="button" id="skip-btn" class="skip-btn">Skip</button>
+            <button type="submit" class="continue-btn">Send & Continue</button>
+        </div>
+    </form>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('message-form');
+    const skip = document.getElementById('skip-btn');
+    const textarea = document.getElementById('message-to-doctor');
+    let backgroundTaskId = null;
+
+    // Start background review generation immediately when page loads
+    startBackgroundGeneration();
+
+    function startBackgroundGeneration() {
+        const formData = new FormData(form);
+        formData.append('message_to_doctor', ''); // Empty message for background generation
+        
+        fetch('/api/generate-reviews-background', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.task_id) {
+                backgroundTaskId = data.task_id;
+                console.log('Background generation started with task ID:', backgroundTaskId);
+            } else {
+                console.error('No task ID received from background generation');
+            }
+        })
+        .catch(error => {
+            console.error('Error starting background generation:', error);
+        });
+    }
+
+    skip.addEventListener('click', () => {
+        textarea.value = '';
+        // Trigger form submission programmatically
+        form.dispatchEvent(new Event('submit', { bubbles: true }));
+    });
+
+    // Handle form submission - go to review selection with task_id and message
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.querySelector('.continue-btn');
+        btn.textContent = 'Continuing...';
+        btn.disabled = true;
+        
+        const messageToDoctor = textarea.value;
+        
+        // Redirect to review selection with task_id and message
+        if (backgroundTaskId) {
+            const url = `/review-selection?task_id=${backgroundTaskId}&message_to_doctor=${encodeURIComponent(messageToDoctor)}`;
+            window.location.href = url;
+        } else {
+            // Fallback: if no task_id, try to submit normally
+            alert('Review generation is still starting. Please wait a moment and try again.');
+            btn.textContent = 'Send & Continue';
+            btn.disabled = false;
+        }
+    });
+
+    textarea.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+    
+    // Display selected procedures
+    function displaySelectedProcedures() {
+        const sessionDataInput = document.querySelector('input[name="session_data"]');
+        const selectedProceduresDisplay = document.getElementById('selected-procedures-display');
+        const selectedProceduresList = document.getElementById('selected-procedures-list');
+        
+        if (sessionDataInput && sessionDataInput.value) {
+            try {
+                const sessionData = JSON.parse(sessionDataInput.value);
+                let procedureNames = [];
+                
+                // Support both old and new format
+                if (sessionData.procedure_names && Array.isArray(sessionData.procedure_names)) {
+                    procedureNames = sessionData.procedure_names;
+                } else if (sessionData.procedure_name) {
+                    procedureNames = [sessionData.procedure_name];
+                }
+                
+                if (procedureNames.length > 0) {
+                    selectedProceduresDisplay.style.display = 'block';
+                    selectedProceduresList.innerHTML = '';
+                    
+                    procedureNames.forEach(procedureName => {
+                        const tag = document.createElement('span');
+                        tag.className = 'selected-procedure-tag';
+                        tag.textContent = procedureName;
+                        selectedProceduresList.appendChild(tag);
+                    });
+                } else {
+                    selectedProceduresDisplay.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Error parsing session data for procedures:', e);
+                selectedProceduresDisplay.style.display = 'none';
+            }
+        } else {
+            selectedProceduresDisplay.style.display = 'none';
+        }
+    }
+    
+    // Initialize procedure display
+    displaySelectedProcedures();
+});
+</script>
+
+<style>
+/* Theme variables override */
+body.review-generating-page {
+    --bg: #f9f4f9;
+    --glow: #ffd9ec;
+    --card-bg: rgba(255, 255, 255, 0.5);
+    --accent1: #a56383;
+    --accent2: #633f66;
+    --text: #4E3F3B;
+}
+
+html.dark body.review-generating-page {
+    --bg: #1d1d1d;
+    --glow: #7D635C;
+    --card-bg: rgba(30, 30, 30, 0.4);
+    --accent1: #992E4F;
+    --accent2: #B85D79;
+    --text: #F4EFE9;
+}
+
+/* Theme toggle styles */
+.toggle-wrapper {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 100;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input { display: none; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent1);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.emotion-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.emotion-glow {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--glow), transparent 70%);
+    filter: blur(80px);
+    animation: float 12s ease-in-out infinite;
+}
+
+.glow-1 {
+    top: 10%;
+    left: 10%;
+}
+
+.glow-2 {
+    bottom: 10%;
+    right: 5%;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-25px); }
+}
+
+.message-glass {
+    max-width: 600px;
+    margin: 5% auto;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    text-align: left;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    font-size: 2.4rem;
+    margin-bottom: 1rem;
+    color: var(--accent1);
+}
+
+.compliment {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: var(--text);
+    line-height: 1.8;
+}
+
+form label {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: var(--accent1);
+}
+
+textarea {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid #ddd;
+    resize: none;
+    min-height: 120px;
+    transition: 0.3s ease;
+    color: var(--text);
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--accent1);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+small {
+    display: block;
+    margin-top: 0.8rem;
+    color: var(--text);
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+button {
+    padding: 0.8rem 1.4rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s ease;
+}
+
+.continue-btn {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: white;
+}
+
+.continue-btn:hover:not(:disabled) {
+    transform: scale(1.04);
+    filter: brightness(1.05);
+}
+
+.continue-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.skip-btn {
+    background: transparent;
+    color: var(--accent1);
+    text-decoration: underline;
+    border: 2px solid var(--accent1);
+}
+
+.skip-btn:hover {
+    background: rgba(184, 93, 121, 0.1);
+    transform: scale(1.02);
+}
+
+/* Selected procedures display */
+.selected-procedures-display {
+    margin-top: 1rem;
+    padding: 0.7rem;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.selected-procedures-display h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent1);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.selected-procedures-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-start;
+}
+
+.selected-procedure-tag {
+    display: inline-block;
+    background: rgba(170, 65, 97, 0.7);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: slideIn 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+.selected-procedure-tag:hover {
+    background: rgba(184, 93, 121, 0.8);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %} 

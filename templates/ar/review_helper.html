@@ -1,0 +1,532 @@
+{% extends "ar/base.html" %}
+
+{% block title %}Copy Your Review{% endblock %}
+{% block body_class %}review-helper-page{% endblock %}
+
+{% block content %}
+<div class="review-helper-section">
+    <h1>📝 Your Review is Ready!</h1>
+    <p class="instruction">Copy your review below and paste it into Google Reviews</p>
+    
+    <div class="review-display">
+        <h3>Your Review:</h3>
+        <div class="review-text" id="review-text">{{ review_text }}</div>
+        <button id="copy-btn" class="copy-btn">📋 Copy Review</button>
+        <div id="copy-feedback" class="copy-feedback" style="display: none;">
+            ✅ Review copied to clipboard!
+        </div>
+    </div>
+    
+    <div class="actions-section">
+        <h3>Next Steps:</h3>
+        <div class="steps">
+            <div class="step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                    <strong>Copy the review above</strong>
+                    <p>Tap the copy button to copy your review to clipboard</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                    <strong>Open Google Reviews</strong>
+                    <p>Visit our clinic on Google and leave a review</p>
+                    {% if google_place_id %}
+                    <a href="https://search.google.com/local/writereview?placeid={{ google_place_id }}" 
+                       target="_blank" class="google-btn">
+                        🌟 Write Google Review
+                    </a>
+                    {% else %}
+                    <a href="https://www.google.com/search?q=clinic+reviews" target="_blank" class="google-btn">
+                        🌟 Search for Our Clinic
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                    <strong>Paste and post</strong>
+                    <p>Paste your review and click post. Thank you!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="help-section">
+        <h3>Need Help?</h3>
+        <div class="help-tips">
+            <div class="tip">
+                <strong>Can't copy?</strong>
+                <p>Try selecting the text manually and copying with Ctrl+C (or Cmd+C on Mac)</p>
+            </div>
+            
+            <div class="tip">
+                <strong>Can't find our clinic?</strong>
+                <p>Search for our clinic name on Google Maps or Google Search</p>
+            </div>
+            
+            <div class="tip">
+                <strong>Having trouble?</strong>
+                <p>Feel free to edit the review to match your experience perfectly</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="thank-you">
+        <h2>Thank You! 🙏</h2>
+        <p>Your feedback helps us improve and helps other patients find our clinic.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const copyBtn = document.getElementById('copy-btn');
+    const reviewText = document.getElementById('review-text');
+    const copyFeedback = document.getElementById('copy-feedback');
+    
+    copyBtn.addEventListener('click', function() {
+        try {
+            // Create a temporary textarea element
+            const textarea = document.createElement('textarea');
+            textarea.value = reviewText.textContent;
+            document.body.appendChild(textarea);
+            
+            // Select and copy the text
+            textarea.select();
+            textarea.setSelectionRange(0, 99999); // For mobile devices
+            
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            if (successful) {
+                showCopyFeedback('✅ Review copied to clipboard!');
+                
+                // Change button text temporarily
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ Copied!';
+                copyBtn.style.background = '#4caf50';
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.style.background = '#1a73e8';
+                }, 2000);
+            } else {
+                throw new Error('Copy command failed');
+            }
+        } catch (err) {
+            console.error('Copy failed:', err);
+            
+            // Fallback: Try using the newer Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(reviewText.textContent)
+                    .then(() => {
+                        showCopyFeedback('✅ Review copied to clipboard!');
+                    })
+                    .catch(() => {
+                        showCopyFeedback('❌ Copy failed. Please select and copy manually.', true);
+                        selectText();
+                    });
+            } else {
+                showCopyFeedback('❌ Copy failed. Please select and copy manually.', true);
+                selectText();
+            }
+        }
+    });
+    
+    function showCopyFeedback(message, isError = false) {
+        copyFeedback.textContent = message;
+        copyFeedback.style.display = 'block';
+        copyFeedback.style.color = isError ? '#f44336' : '#4caf50';
+        
+        setTimeout(() => {
+            copyFeedback.style.display = 'none';
+        }, 3000);
+    }
+    
+    function selectText() {
+        // Select the review text for manual copying
+        if (window.getSelection) {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(reviewText);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+    }
+    
+    // Add long-press to copy on mobile
+    let longPressTimer;
+    reviewText.addEventListener('touchstart', function(e) {
+        longPressTimer = setTimeout(() => {
+            selectText();
+            showCopyFeedback('Text selected! Use your device\'s copy function.');
+        }, 800);
+    });
+    
+    reviewText.addEventListener('touchend', function(e) {
+        clearTimeout(longPressTimer);
+    });
+    
+    reviewText.addEventListener('touchmove', function(e) {
+        clearTimeout(longPressTimer);
+    });
+    
+    // Track usage analytics (optional)
+    // You could add analytics tracking here to see how many people use the copy feature
+    
+    // Make review text editable on double-click
+    reviewText.addEventListener('dblclick', function() {
+        if (confirm('Would you like to edit this review?')) {
+            makeEditable();
+        }
+    });
+    
+    function makeEditable() {
+        const currentText = reviewText.textContent;
+        reviewText.innerHTML = '';
+        
+        const textarea = document.createElement('textarea');
+        textarea.value = currentText;
+        textarea.style.width = '100%';
+        textarea.style.minHeight = '120px';
+        textarea.style.padding = '1rem';
+        textarea.style.border = '2px solid #1a73e8';
+        textarea.style.borderRadius = '8px';
+        textarea.style.fontFamily = 'inherit';
+        textarea.style.fontSize = 'inherit';
+        textarea.style.lineHeight = 'inherit';
+        
+        reviewText.appendChild(textarea);
+        textarea.focus();
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save Changes';
+        saveBtn.className = 'save-btn';
+        saveBtn.onclick = function() {
+            reviewText.innerHTML = textarea.value;
+            showCopyFeedback('✅ Review updated!');
+        };
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.className = 'cancel-btn';
+        cancelBtn.onclick = function() {
+            reviewText.innerHTML = currentText;
+        };
+        
+        const btnContainer = document.createElement('div');
+        btnContainer.style.marginTop = '1rem';
+        btnContainer.style.display = 'flex';
+        btnContainer.style.gap = '0.5rem';
+        btnContainer.appendChild(saveBtn);
+        btnContainer.appendChild(cancelBtn);
+        
+        reviewText.appendChild(btnContainer);
+    }
+});
+</script>
+
+<style>
+.review-helper-section {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    background: white;
+    min-height: 100vh;
+}
+
+.review-helper-section h1 {
+    color: #1a73e8;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.instruction {
+    text-align: center;
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.review-display {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border: 2px solid #1a73e8;
+    text-align: center;
+}
+
+.review-display h3 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.review-text {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+    margin-bottom: 1rem;
+    border: 1px solid #e0e0e0;
+    cursor: text;
+    user-select: all;
+    -webkit-user-select: all;
+    -moz-user-select: all;
+    -ms-user-select: all;
+}
+
+.copy-btn {
+    background: #1a73e8;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.copy-btn:hover {
+    background: #1557b0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(26, 115, 232, 0.4);
+}
+
+.copy-feedback {
+    margin-top: 1rem;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.actions-section {
+    margin-bottom: 2rem;
+}
+
+.actions-section h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+}
+
+.step-number {
+    background: #4caf50;
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content strong {
+    display: block;
+    color: #333;
+    margin-bottom: 0.25rem;
+    font-size: 1rem;
+}
+
+.step-content p {
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.google-btn {
+    background: #4285f4;
+    color: white;
+    text-decoration: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-block;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.google-btn:hover {
+    background: #3367d6;
+    transform: translateY(-1px);
+}
+
+.help-section {
+    background: #fff3e0;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    border: 2px solid #ff9800;
+}
+
+.help-section h3 {
+    color: #e65100;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.help-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tip {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #ff9800;
+}
+
+.tip strong {
+    display: block;
+    color: #e65100;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.tip p {
+    color: #666;
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.thank-you {
+    text-align: center;
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 2px solid #4caf50;
+}
+
+.thank-you h2 {
+    color: #2e7d32;
+    margin-bottom: 0.5rem;
+}
+
+.thank-you p {
+    color: #555;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.save-btn, .cancel-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.save-btn {
+    background: #4caf50;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #45a049;
+}
+
+.cancel-btn {
+    background: #666;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #555;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .review-helper-section {
+        padding: 1rem;
+    }
+    
+    .review-helper-section h1 {
+        font-size: 1.5rem;
+    }
+    
+    .review-display {
+        padding: 1rem;
+    }
+    
+    .review-text {
+        font-size: 1rem;
+        padding: 1rem;
+    }
+    
+    .copy-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .steps {
+        gap: 0.75rem;
+    }
+    
+    .step {
+        padding: 0.75rem;
+    }
+    
+    .step-number {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .review-text {
+        border: 2px solid #000;
+    }
+    
+    .copy-btn {
+        border: 2px solid #fff;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .copy-btn {
+        transition: none;
+    }
+    
+    .copy-btn:hover {
+        transform: none;
+    }
+}
+</style>
+{% endblock %} 
