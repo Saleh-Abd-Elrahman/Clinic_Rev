@@ -16,7 +16,7 @@
   </label>
 </div>
 
-
+<div class="review-selection-section">
     <h1 class="title-color">📱 اختر مراجعتك</h1>
     <h2 class="subtitle-text">اختر المراجعة التي تمثل تجربتك بأفضل شكل</h2>
     
@@ -64,6 +64,7 @@
     <div class="navigation">
         <a href="/main-selection" class="back-btn">← العودة للقائمة الرئيسية</a>
     </div>
+</div>
 
 
 <!-- Custom Review Modal -->
@@ -825,11 +826,49 @@ function populateReviewOptions(reviews, reviewData) {
 @media (max-width: 768px) {
     .review-selection-section {
         padding: 1rem;
+        margin: 1rem;
+        min-height: calc(100vh - 2rem);
+    }
+    
+    .title-color {
+        font-size: 2rem;
+    }
+    
+    .subtitle-text {
+        font-size: 1rem;
+    }
+    
+    .review-options {
+        gap: 1rem;
+    }
+    
+    .review-card {
+        padding: 1rem;
+    }
+    
+    .review-text {
+        font-size: 1rem;
+    }
+    
+    .review-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .edit-btn, .preview-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
     
     .actions {
         flex-direction: column;
         align-items: center;
+        gap: 1rem;
+    }
+    
+    .add-custom-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
     }
     
     .finalize-btn {
@@ -837,8 +876,65 @@ function populateReviewOptions(reviews, reviewData) {
         font-size: 1rem;
     }
     
+    .modal-content {
+        width: 90%;
+        max-width: none;
+        margin: 1rem;
+    }
+    
     .modal-actions {
         flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-btn {
+        width: 100%;
+    }
+    
+    .loading-state {
+        padding: 1.5rem;
+    }
+    
+    .loading-state h3 {
+        font-size: 1.2rem;
+    }
+    
+    .loading-state p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Ensure proper scrolling on mobile */
+@media (max-width: 480px) {
+    .review-selection-section {
+        padding: 0.8rem;
+        margin: 0.5rem;
+        min-height: calc(100vh - 1rem);
+    }
+    
+    .title-color {
+        font-size: 1.8rem;
+    }
+    
+    .subtitle-text {
+        font-size: 0.9rem;
+    }
+    
+    .review-card {
+        padding: 0.8rem;
+    }
+    
+    .review-text {
+        font-size: 0.9rem;
+    }
+    
+    .loading-state {
+        padding: 1rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 0.5rem;
     }
 }
 </style>

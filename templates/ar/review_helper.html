@@ -16,7 +16,7 @@
   </label>
 </div>
 
-
+<div class="review-helper-section">
     <h1 class="title-color">📝 مراجعتك جاهزة!</h1>
     <p class="instruction">انسخ مراجعتك أدناه والصقها في مراجعات جوجل</p>
     
@@ -48,11 +48,11 @@
                     {% if google_place_id %}
                     <a href="https://search.google.com/local/writereview?placeid={{ google_place_id }}" 
                        target="_blank" class="google-btn">
-                        🌟 كتابة مراجعة جوجل
+                        🌟 اكتب مراجعة جوجل
                     </a>
                     {% else %}
                     <a href="https://www.google.com/search?q={{ clinic_name|urlencode }}+reviews" target="_blank" class="google-btn">
-                        🌟 البحث عن {{ clinic_name }} في جوجل
+                        🌟 ابحث عن {{ clinic_name }} على جوجل
                     </a>
                     {% endif %}
                 </div>
@@ -62,40 +62,39 @@
                 <span class="step-number">3</span>
                 <div class="step-content">
                     <strong>الصق وانشر</strong>
-                    <p>الصق مراجعتك واضغط على نشر. شكراً لك!</p>
+                    <p>الصق مراجعتك واضغط على نشر. شكرًا لك!</p>
                 </div>
             </div>
         </div>
     </div>
     
     <div class="help-section">
-        <h3>هل تحتاج مساعدة؟</h3>
+        <h3>📚 تحتاج مساعدة؟</h3>
         <div class="help-tips">
             <div class="tip">
-                <strong>لا تستطيع النسخ؟</strong>
-                <p>جرب تحديد النص يدوياً ونسخه باستخدام Ctrl+C (أو Cmd+C على Mac)</p>
+                <strong>📱 لا تستطيع النسخ؟</strong>
+                <p>جرب الضغط مطولاً على نص المراجعة لتحديده، ثم استخدم وظيفة النسخ في جهازك.</p>
             </div>
-            
             <div class="tip">
-                <strong>لا تستطيع العثور على عيادتنا؟</strong>
-                <p>ابحث عن اسم عيادتنا في خرائط جوجل أو بحث جوجل</p>
+                <strong>🔍 لا تجدنا على جوجل؟</strong>
+                <p>ابحث عن "{{ clinic_name }}" وابحث عن قسم المراجعات.</p>
             </div>
-            
             <div class="tip">
-                <strong>تواجه مشاكل؟</strong>
-                <p>لا تتردد في تعديل المراجعة لتتناسب مع تجربتك بشكل مثالي</p>
+                <strong>✏️ تريد التعديل؟</strong>
+                <p>انقر نقرًا مزدوجًا على نص المراجعة لإجراء تغييرات قبل النسخ.</p>
             </div>
         </div>
     </div>
     
     <div class="thank-you">
-        <h2>شكراً لك! 🙏</h2>
-        <p>ملاحظاتك تساعدنا في التحسن وتساعد المرضى الآخرين في العثور على عيادتنا.</p>
+        <h2>🙏 شكرًا لك!</h2>
+        <p>مراجعتك تساعد المرضى الآخرين في العثور على عيادتنا وتدعم مهمتنا لتقديم رعاية ممتازة.</p>
     </div>
     
     <div class="navigation">
         <a href="/main-selection" class="back-btn">← العودة للقائمة الرئيسية</a>
     </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -243,6 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 24px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     animation: fadeIn 1.2s ease;
+    min-height: calc(100vh - 4rem);
 }
 
 .title-color {
@@ -304,7 +304,6 @@ document.addEventListener('DOMContentLoaded', function() {
     -ms-user-select: all;
     transition: all 0.3s ease;
     direction: rtl;
-    text-align: right;
 }
 
 .review-text:hover {
@@ -384,12 +383,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .step {
     display: flex;
-    align-items: flex-start;
     gap: 1rem;
-    padding: 1.5rem;
+    align-items: flex-start;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    border-radius: 16px;
+    padding: 1.5rem;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
     direction: rtl;
@@ -402,24 +401,22 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .step-number {
-    background: linear-gradient(145deg, var(--accent1), var(--accent2));
-    color: white;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    font-size: 1.1rem;
+    width: 2rem;
+    height: 2rem;
+    background: linear-gradient(145deg, var(--accent1), var(--accent2));
+    color: white;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 1rem;
     flex-shrink: 0;
     box-shadow: 0 4px 16px rgba(184, 93, 121, 0.3);
-    order: 2;
 }
 
 .step-content {
     flex: 1;
-    order: 1;
 }
 
 .step-content strong {
@@ -427,25 +424,25 @@ document.addEventListener('DOMContentLoaded', function() {
     color: var(--title);
     margin-bottom: 0.5rem;
     font-size: 1.1rem;
-    text-align: right;
 }
 
 .step-content p {
     color: var(--text);
-    margin-bottom: 1rem;
+    margin: 0;
     opacity: 0.8;
     line-height: 1.5;
-    text-align: right;
 }
 
 .google-btn {
-    background: linear-gradient(145deg, #4285f4, #3367d6);
+    display: inline-block;
+    background: linear-gradient(145deg, #4285f4, #1a73e8);
     color: white;
     text-decoration: none;
     padding: 0.8rem 1.5rem;
     border-radius: 12px;
     font-weight: 600;
-    display: inline-block;
+    font-size: 1rem;
+    margin-top: 1rem;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
 }
@@ -453,10 +450,11 @@ document.addEventListener('DOMContentLoaded', function() {
 .google-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+    background: linear-gradient(145deg, #1a73e8, #1557b0);
 }
 
 .help-section {
-    background: var(--card-bg);
+    background: linear-gradient(145deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.1));
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
@@ -500,7 +498,6 @@ document.addEventListener('DOMContentLoaded', function() {
     color: var(--title);
     margin-bottom: 0.5rem;
     font-size: 1rem;
-    text-align: right;
 }
 
 .tip p {
@@ -508,7 +505,6 @@ document.addEventListener('DOMContentLoaded', function() {
     margin: 0;
     opacity: 0.8;
     line-height: 1.5;
-    text-align: right;
 }
 
 .thank-you {
@@ -567,23 +563,21 @@ document.addEventListener('DOMContentLoaded', function() {
     min-height: 150px;
     padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     color: var(--text);
+    font-size: 1rem;
+    line-height: 1.6;
     resize: vertical;
-    margin-bottom: 1rem;
+    font-family: inherit;
     direction: rtl;
-    text-align: right;
 }
 
 .edit-textarea:focus {
     outline: none;
     border-color: var(--accent1);
-    box-shadow: 0 0 0 3px rgba(184, 93, 121, 0.2);
+    box-shadow: 0 0 0 2px rgba(184, 93, 121, 0.2);
 }
 
 .edit-buttons {
@@ -633,10 +627,12 @@ document.addEventListener('DOMContentLoaded', function() {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Mobile optimizations */
+/* Mobile responsive styles */
 @media (max-width: 768px) {
     .review-helper-section {
         padding: 1rem;
+        margin: 1rem;
+        min-height: calc(100vh - 2rem);
     }
     
     .title-color {
@@ -661,22 +657,69 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 1rem;
     }
     
+    .actions-section {
+        padding: 1.5rem;
+    }
+    
     .steps {
         gap: 1rem;
     }
     
     .step {
         padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
     }
     
     .step-number {
-        width: 2rem;
-        height: 2rem;
-        font-size: 1rem;
+        align-self: center;
+        margin-bottom: 0.5rem;
     }
     
-    .actions-section, .help-section, .thank-you {
+    .help-section {
         padding: 1.5rem;
+    }
+    
+    .thank-you {
+        padding: 1.5rem;
+    }
+    
+    .thank-you h2 {
+        font-size: 1.5rem;
+    }
+    
+    .thank-you p {
+        font-size: 1rem;
+    }
+}
+
+/* Ensure proper scrolling on mobile */
+@media (max-width: 480px) {
+    .review-helper-section {
+        padding: 0.8rem;
+        margin: 0.5rem;
+        min-height: calc(100vh - 1rem);
+    }
+    
+    .title-color {
+        font-size: 1.8rem;
+    }
+    
+    .review-display {
+        padding: 1rem;
+    }
+    
+    .actions-section {
+        padding: 1rem;
+    }
+    
+    .help-section {
+        padding: 1rem;
+    }
+    
+    .thank-you {
+        padding: 1rem;
     }
 }
 </style>
