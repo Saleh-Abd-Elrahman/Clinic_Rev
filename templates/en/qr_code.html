@@ -16,7 +16,7 @@
   </label>
 </div>
 
-<div class="qr-section">
+
     <h1 class="title-color">📱 Scan to Leave Your Review</h1>
     <p class="instruction">Scan this QR code with your phone to copy and post your review:</p>
     
@@ -35,18 +35,10 @@
         <a href="{{ review_url }}" target="_blank" class="review-link">{{ review_url }}</a>
     </div>
     
-    <div class="reset-info">
-        <div class="countdown-container">
-            <p>⏰ This screen will automatically reset in <span id="countdown">120</span> seconds</p>
-        </div>
-        <p><em>👨‍💻 Staff: Press 'R' to reset immediately</em></p>
-        <button id="reset-now" class="reset-btn">🔄 Reset Now</button>
-    </div>
-    
     <div class="navigation">
         <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
     </div>
-</div>
+
 
 <script>
 let countdownSeconds = 120; // 2 minutes

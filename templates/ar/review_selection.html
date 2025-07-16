@@ -277,8 +277,22 @@ function pollBackgroundTask() {
     
     function poll() {
         fetch(`/api/review-status/${TASK_ID}`)
-            .then(response => response.json())
+            .then(response => {
+                if (response.status === 404) {
+                    // Task not found - it was already completed and deleted
+                    progressText.textContent = 'تم إكمال إنشاء المراجعة مسبقاً. يرجى العودة والمحاولة مرة أخرى.';
+                    progressText.style.color = 'orange';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/main-selection';
+                    }, 3000);
+                    return null;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return; // Handle 404 case
+                
                 if (data.status === 'completed') {
                     // Update progress to 100%
                     progressFill.style.width = '100%';
