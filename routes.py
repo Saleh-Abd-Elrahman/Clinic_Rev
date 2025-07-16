@@ -30,6 +30,9 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Google Place ID for reviews
 GOOGLE_PLACE_ID = os.getenv("GOOGLE_PLACE_ID", "")
 
+# Clinic name for Google search fallback
+CLINIC_NAME = os.getenv("CLINIC_NAME", "Passion Clinics | باشن كلينكس، وادي الثمامة،, Al Olaya, Riyadh 12214, Saudi Arabia")
+
 # Load PDF content for knowledge base
 def load_pdf_knowledge_base():
     """Load and extract text from the PDF knowledge base."""
@@ -605,7 +608,8 @@ async def review_helper(request: Request, review_id: int, db: Session = Depends(
     
     return render_lang(request, "review_helper.html", {
         "review_text": review.selected_review,
-        "google_place_id": GOOGLE_PLACE_ID
+        "google_place_id": GOOGLE_PLACE_ID,
+        "clinic_name": CLINIC_NAME
     })
 
 # ============== ADMIN DASHBOARD ROUTES ==============

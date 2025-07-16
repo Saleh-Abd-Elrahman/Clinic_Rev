@@ -53,20 +53,33 @@
             {% endfor %}
         </div>
         
-        <div class="custom-review-section" style="display: none;">
-            <h3>✨ Custom Review</h3>
-            <textarea id="custom-review" name="custom_review" placeholder="Write your own review..."></textarea>
-            <button type="button" class="use-custom-btn" onclick="useCustomReview()">Use This Review</button>
-        </div>
+        <!-- Remove the custom-review-section -->
         
         <div class="actions">
-            <button type="button" class="add-custom-btn" onclick="showCustomReview()">✍️ Write Your Own</button>
+            <button type="button" class="add-custom-btn" onclick="showCustomReviewModal()">✍️ Write Your Own</button>
             <button type="submit" class="finalize-btn">🎯 Generate QR Code</button>
         </div>
     </form>
     
     <div class="navigation">
         <a href="/main-selection" class="back-btn">← Back to Main Menu</a>
+    </div>
+</div>
+
+<!-- Custom Review Modal -->
+<div id="custom-review-modal" class="modal" style="display: none;">
+    <div class="modal-content glass-modal">
+        <div class="modal-header">
+            <h3>✍️ Write Your Own Review</h3>
+            <span class="close-btn" onclick="closeCustomReviewModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <textarea id="custom-review-textarea" placeholder="Write your own review here..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn cancel-btn" onclick="closeCustomReviewModal()">Cancel</button>
+            <button class="modal-btn save-btn" onclick="useCustomReview()">💾 Use This Review</button>
+        </div>
     </div>
 </div>
 
@@ -175,13 +188,17 @@ function closePreview() {
     document.getElementById('preview-modal').style.display = 'none';
 }
 
-function showCustomReview() {
-    document.querySelector('.custom-review-section').style.display = 'block';
-    document.getElementById('custom-review').focus();
+function showCustomReviewModal() {
+    document.getElementById('custom-review-modal').style.display = 'flex';
+    document.getElementById('custom-review-textarea').focus();
+}
+
+function closeCustomReviewModal() {
+    document.getElementById('custom-review-modal').style.display = 'none';
 }
 
 function useCustomReview() {
-    const customText = document.getElementById('custom-review').value.trim();
+    const customText = document.getElementById('custom-review-textarea').value.trim();
     if (customText) {
         // Deselect all existing reviews
         document.querySelectorAll('input[name="selected_review"]').forEach(radio => {
@@ -195,8 +212,8 @@ function useCustomReview() {
         hiddenInput.value = customText;
         document.getElementById('review-form').appendChild(hiddenInput);
         
-        // Hide custom review section and show confirmation
-        document.querySelector('.custom-review-section').style.display = 'none';
+        // Hide custom review modal and show confirmation
+        document.getElementById('custom-review-modal').style.display = 'none';
         
         // Show confirmation
         const confirmation = document.createElement('div');
@@ -207,9 +224,15 @@ function useCustomReview() {
         // Change button text
         document.querySelector('.add-custom-btn').textContent = '✏️ Edit Custom Review';
         document.querySelector('.add-custom-btn').onclick = function() {
-            document.querySelector('.custom-review-section').style.display = 'block';
+            // Pre-populate the textarea with the current custom review
+            document.getElementById('custom-review-textarea').value = customText;
+            showCustomReviewModal();
+            // Remove the old confirmation when editing
             if (confirmation) confirmation.remove();
         };
+        
+        // Clear the textarea for next use
+        document.getElementById('custom-review-textarea').value = '';
     }
 }
 
@@ -228,6 +251,12 @@ document.getElementById('review-form').addEventListener('submit', function(e) {
 document.getElementById('edit-modal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeEditModal();
+    }
+});
+
+document.getElementById('custom-review-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeCustomReviewModal();
     }
 });
 
@@ -448,57 +477,7 @@ function populateReviewOptions(reviews, reviewData) {
     color: white;
 }
 
-.custom-review-section {
-    background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    padding: 1.5rem;
-    border-radius: 20px;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(184, 93, 121, 0.1);
-}
-
-.custom-review-section h3 {
-    margin-bottom: 1rem;
-    color: var(--title);
-}
-
-.custom-review-section textarea {
-    width: 100%;
-    min-height: 120px;
-    padding: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    font-family: inherit;
-    font-size: 1rem;
-    resize: vertical;
-    margin-bottom: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    color: var(--text);
-}
-
-.custom-review-section textarea:focus {
-    outline: none;
-    border-color: var(--accent1);
-    box-shadow: 0 0 0 3px rgba(184, 93, 121, 0.2);
-}
-
-.use-custom-btn {
-    background: linear-gradient(145deg, var(--accent1), var(--accent2));
-    color: white;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(184, 93, 121, 0.3);
-}
-
-.use-custom-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(184, 93, 121, 0.4);
-}
+/* Custom review section styles removed - now using modal */
 
 .actions {
     display: flex;
@@ -654,21 +633,26 @@ function populateReviewOptions(reviews, reviewData) {
     padding: 1.5rem;
 }
 
-.modal-body #edit-textarea {
+.modal-body #edit-textarea,
+.modal-body #custom-review-textarea {
     width: 100%;
-    min-height: 200px;
+    min-height: 300px;
+    max-height: 500px;
     padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 12px;
     font-family: inherit;
     font-size: 1rem;
+    line-height: 1.5;
     resize: vertical;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     color: var(--text);
+    box-sizing: border-box;
 }
 
-.modal-body #edit-textarea:focus {
+.modal-body #edit-textarea:focus,
+.modal-body #custom-review-textarea:focus {
     outline: none;
     border-color: var(--accent1);
     box-shadow: 0 0 0 3px rgba(184, 93, 121, 0.2);
