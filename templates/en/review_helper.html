@@ -69,26 +69,28 @@
     </div>
     
     <div class="help-section">
-        <h3>📚 Need Help?</h3>
+        <h3>Need Help?</h3>
         <div class="help-tips">
             <div class="tip">
-                <strong>📱 Can't copy?</strong>
-                <p>Try long-pressing the review text to select it, then use your device's copy function.</p>
+                <strong>Can't copy?</strong>
+                <p>Try selecting the text manually and copying with Ctrl+C (or Cmd+C on Mac)</p>
             </div>
+            
             <div class="tip">
-                <strong>🔍 Can't find us on Google?</strong>
-                <p>Search for "{{ clinic_name }}" and look for the reviews section.</p>
+                <strong>Can't find our clinic?</strong>
+                <p>Search for our clinic name on Google Maps or Google Search</p>
             </div>
+            
             <div class="tip">
-                <strong>✏️ Want to edit?</strong>
-                <p>Double-click the review text to make changes before copying.</p>
+                <strong>Having trouble?</strong>
+                <p>Feel free to edit the review to match your experience perfectly</p>
             </div>
         </div>
     </div>
     
     <div class="thank-you">
-        <h2>🙏 Thank You!</h2>
-        <p>Your review helps other patients find our clinic and supports our mission to provide excellent care.</p>
+        <h2>Thank You! 🙏</h2>
+        <p>Your feedback helps us improve and helps other patients find our clinic.</p>
     </div>
     
     <div class="navigation">
@@ -243,7 +245,48 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 24px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     animation: fadeIn 1.2s ease;
-    min-height: calc(100vh - 4rem);
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Mobile scrolling fixes */
+@media (max-width: 768px) {
+    .review-helper-section {
+        padding: 1rem;
+        border-radius: 16px;
+        margin: 1rem;
+        max-width: none;
+        min-height: calc(100vh - 2rem);
+    }
+    
+    .title-color {
+        font-size: 2rem;
+    }
+    
+    .instruction {
+        font-size: 1rem;
+    }
+    
+    .review-display {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .actions-section {
+        padding: 1rem;
+    }
+}
+
+/* Ensure proper scrolling on mobile */
+body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 .title-color {
@@ -378,12 +421,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .step {
     display: flex;
-    gap: 1rem;
     align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    padding: 1.5rem;
-    border-radius: 12px;
+    border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
 }
@@ -395,16 +438,16 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .step-number {
+    background: linear-gradient(145deg, var(--accent1), var(--accent2));
+    color: white;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: linear-gradient(145deg, var(--accent1), var(--accent2));
-    color: white;
-    border-radius: 50%;
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: bold;
+    font-size: 1.1rem;
     flex-shrink: 0;
     box-shadow: 0 4px 16px rgba(184, 93, 121, 0.3);
 }
@@ -422,21 +465,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .step-content p {
     color: var(--text);
-    margin: 0;
+    margin-bottom: 1rem;
     opacity: 0.8;
     line-height: 1.5;
 }
 
 .google-btn {
-    display: inline-block;
-    background: linear-gradient(145deg, #4285f4, #1a73e8);
+    background: linear-gradient(145deg, #4285f4, #3367d6);
     color: white;
     text-decoration: none;
     padding: 0.8rem 1.5rem;
     border-radius: 12px;
     font-weight: 600;
-    font-size: 1rem;
-    margin-top: 1rem;
+    display: inline-block;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px rgba(66, 133, 244, 0.3);
 }
@@ -444,11 +485,10 @@ document.addEventListener('DOMContentLoaded', function() {
 .google-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
-    background: linear-gradient(145deg, #1a73e8, #1557b0);
 }
 
 .help-section {
-    background: linear-gradient(145deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.1));
+    background: var(--card-bg);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 20px;
@@ -553,20 +593,21 @@ document.addEventListener('DOMContentLoaded', function() {
     min-height: 150px;
     padding: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     color: var(--text);
-    font-size: 1rem;
-    line-height: 1.6;
     resize: vertical;
-    font-family: inherit;
+    margin-bottom: 1rem;
 }
 
 .edit-textarea:focus {
     outline: none;
     border-color: var(--accent1);
-    box-shadow: 0 0 0 2px rgba(184, 93, 121, 0.2);
+    box-shadow: 0 0 0 3px rgba(184, 93, 121, 0.2);
 }
 
 .edit-buttons {
@@ -615,12 +656,10 @@ document.addEventListener('DOMContentLoaded', function() {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Mobile responsive styles */
+/* Mobile optimizations */
 @media (max-width: 768px) {
     .review-helper-section {
         padding: 1rem;
-        margin: 1rem;
-        min-height: calc(100vh - 2rem);
     }
     
     .title-color {
@@ -645,69 +684,22 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 1rem;
     }
     
-    .actions-section {
-        padding: 1.5rem;
-    }
-    
     .steps {
         gap: 1rem;
     }
     
     .step {
         padding: 1rem;
-        flex-direction: column;
-        text-align: center;
-        gap: 0.5rem;
     }
     
     .step-number {
-        align-self: center;
-        margin-bottom: 0.5rem;
-    }
-    
-    .help-section {
-        padding: 1.5rem;
-    }
-    
-    .thank-you {
-        padding: 1.5rem;
-    }
-    
-    .thank-you h2 {
-        font-size: 1.5rem;
-    }
-    
-    .thank-you p {
+        width: 2rem;
+        height: 2rem;
         font-size: 1rem;
     }
-}
-
-/* Ensure proper scrolling on mobile */
-@media (max-width: 480px) {
-    .review-helper-section {
-        padding: 0.8rem;
-        margin: 0.5rem;
-        min-height: calc(100vh - 1rem);
-    }
     
-    .title-color {
-        font-size: 1.8rem;
-    }
-    
-    .review-display {
-        padding: 1rem;
-    }
-    
-    .actions-section {
-        padding: 1rem;
-    }
-    
-    .help-section {
-        padding: 1rem;
-    }
-    
-    .thank-you {
-        padding: 1rem;
+    .actions-section, .help-section, .thank-you {
+        padding: 1.5rem;
     }
 }
 </style>
