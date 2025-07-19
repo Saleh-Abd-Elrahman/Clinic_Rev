@@ -108,6 +108,7 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         
         Each review should be:
         - Natural and authentic (1-3 sentences)
+        - Sound like a real patient writing a Google review — conversational but polite, confident but not exaggerated
         - Positive and professional
         - Mention specific aspects from the feedback
         - Include the staff thank you appropriately in the review
@@ -125,7 +126,7 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
                 {"role": "system", "content": f"You are a helpful assistant that writes authentic, positive Google reviews for medical clinics based on patient feedback. Always write in {fallback_language} as specified in the user's request."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=400,
+            max_tokens=500,
             temperature=0.7
         )
         
