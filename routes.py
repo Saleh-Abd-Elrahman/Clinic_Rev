@@ -16,6 +16,7 @@ import openai
 from openai import OpenAI
 from dotenv import load_dotenv
 import PyPDF2
+import re
 
 # Add new import for background tasks
 import asyncio
@@ -58,6 +59,27 @@ background_tasks: Dict[str, Dict[str, Any]] = {}
 async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_name: str, rating: int, selected_factors: list, selected_staff: list = [], all_staff_selected: bool = False, additional_comments: str = "", language: str = "English") -> list:
     """Generate AI-powered review suggestions based on patient feedback."""
     try:
+        # Helper to remove any leading numbering/bullets (including Arabic-Indic digits)
+        def clean_leading_numbering(text: str) -> str:
+            if not isinstance(text, str):
+                return text
+            original = text
+            # Patterns to strip: bullets/dashes, Western digits, Arabic-Indic digits, wrapped digits like (1)
+            patterns = [
+                r"^\s*[\-\u2212\u2013\u2014•\*]\s+",               # bullets/dashes
+                r"^\s*(?:\d+|[\u0660-\u0669]+)[\.)\-:]{1}\s+",     # 1. ١) 2- etc
+                r"^\s*[\(\[]\s*(?:\d+|[\u0660-\u0669]+)\s*[\)\]]\s+"  # (1) [١]
+            ]
+            changed = True
+            while changed:
+                changed = False
+                for pat in patterns:
+                    new_text = re.sub(pat, "", text)
+                    if new_text != text:
+                        text = new_text
+                        changed = True
+            return text.strip()
+
         # Build context from factors
         factors_text = ", ".join(selected_factors) if selected_factors else ""
         
@@ -88,6 +110,18 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
                 elif len(selected_staff) == 2:
                     staff_thank_you = f"Thank you to {doctor_name} and {selected_staff[0]}"
         
+        # Add coordinator-specific instruction to the prompt without changing existing logic
+        coordinator_prompt_instruction = ""
+        try:
+            if "coordinator" in selected_staff:
+                if language.lower().startswith("arab"):
+                    coordinator_prompt_instruction = "IMPORTANT: If the coordinator is selected, explicitly mention 'المنسقه ميس' in the review when thanking staff."
+                else:
+                    coordinator_prompt_instruction = "IMPORTANT: If the coordinator is selected, explicitly mention 'the coordinator Mais' in the review when thanking staff."
+        except Exception:
+            # Fail-safe: do not block generation if selected_staff is not iterable/mutable
+            coordinator_prompt_instruction = ""
+
         # Create prompt with PDF knowledge base and staff thank you
         prompt = f"""
         You are an expert at writing authentic Google reviews for medical clinics. Use the following knowledge base of past reviews as a guide for style, tone, and formatting:
@@ -116,6 +150,7 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         - Different in tone and style from the others
         - Follow the style and format patterns shown in the knowledge base examples
         - If the doctor, coordinator, or nursing team are mentioned, make sure to thank the doctor and the team and not all separately
+        {coordinator_prompt_instruction}
         
         Return only the review texts, one per line, no numbering or formatting.
         """
@@ -131,7 +166,7 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
         )
         
         content = response.choices[0].message.content.strip()
-        reviews = [review.strip() for review in content.split('\n') if review.strip()]
+        reviews = [clean_leading_numbering(review.strip()) for review in content.split('\n') if review.strip()]
         
         # Ensure we have exactly 4 reviews
         if len(reviews) < 4:
@@ -152,24 +187,25 @@ async def generate_ai_reviews(patient_name: str, procedure_names: list, doctor_n
                     f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
                 ])
         
-        return reviews[:4]  # Return only first 4
+        # Ensure we return exactly 4, after cleaning
+        return reviews[:4]
         
     except Exception as e:
         print(f"Error generating AI reviews: {e}")
         # Return fallback reviews based on language
         if language.lower().startswith("arab"):
             return [
-                f"تجربة ممتازة مع الدكتور {doctor_name} في {procedure_text}. الموظفين محترفين والنتائج فاقت توقعاتي.",
-                f"أنصح بشدة بهذه العيادة! علاج {procedure_text} كان مريح والفريق كان متعاون جداً.",
-                f"تجربة رائعة في هذه العيادة. الدكتور {doctor_name} قام بعمل ممتاز في {procedure_text}.",
-                f"خدمة مهنية ونتائج ممتازة. سعيد جداً بعلاج {procedure_text}."
+                clean_leading_numbering(f"تجربة ممتازة مع الدكتور {doctor_name} في {procedure_text}. الموظفين محترفين والنتائج فاقت توقعاتي."),
+                clean_leading_numbering(f"أنصح بشدة بهذه العيادة! علاج {procedure_text} كان مريح والفريق كان متعاون جداً."),
+                clean_leading_numbering(f"تجربة رائعة في هذه العيادة. الدكتور {doctor_name} قام بعمل ممتاز في {procedure_text}."),
+                clean_leading_numbering(f"خدمة مهنية ونتائج ممتازة. سعيد جداً بعلاج {procedure_text}.")
             ]
         else:
             return [
-                f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations.",
-                f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring.",
-                f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}.",
-                f"Professional service and excellent results. Very happy with my {procedure_text} treatment."
+                clean_leading_numbering(f"Had an excellent experience with {doctor_name} for {procedure_mention}. The staff was professional and the results exceeded my expectations."),
+                clean_leading_numbering(f"Highly recommend this clinic! The {procedure_text} treatment was comfortable and the team was very caring."),
+                clean_leading_numbering(f"Great experience at this clinic. {doctor_name} did an amazing job with {procedure_mention}."),
+                clean_leading_numbering(f"Professional service and excellent results. Very happy with my {procedure_text} treatment.")
             ]
 
 router = APIRouter()
