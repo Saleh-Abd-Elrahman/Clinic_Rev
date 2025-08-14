@@ -23,6 +23,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def init_db():
     db = SessionLocal()
     try:
+        # Allow disabling seeding for production/live deployments
+        if os.getenv("SKIP_DB_SEED", "false").lower() in ("1", "true", "yes"): 
+            return
         # Add default procedures if they don't exist
         existing_procedures = db.query(Procedure).count()
         if existing_procedures == 0:
